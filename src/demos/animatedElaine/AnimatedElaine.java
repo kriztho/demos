@@ -8,6 +8,7 @@ import demos.shared.Background;
 import demos.shared.FloatingDisplay;
 import demos.shared.MainGamePanel;
 import demos.shared.OnScreenController;
+import demos.shared.OnScreenJoyStick;
 
 import android.content.Context;
 import android.graphics.BitmapFactory;
@@ -15,6 +16,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.renderscript.Float2;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -33,6 +35,7 @@ SurfaceHolder.Callback {
 	private boolean isScrolling = false;
 	private OnScreenController dPad;
 	private OnScreenController actionButtons;
+	private OnScreenJoyStick jStick;
 	private Background currentBackground;
 	private int firstPointerId = INVALID_POINTER_ID;
 	private int secondPointerId = INVALID_POINTER_ID;
@@ -55,8 +58,9 @@ SurfaceHolder.Callback {
 		
 		elaine = new ElaineAnimated(BitmapFactory.decodeResource( getResources(), R.drawable.walk_elaine), getWidth()/2, getHeight()/2, 5, 5);
 		frameBox = new Rect(0, 0, getWidth(), getHeight());
-		dPad = new OnScreenController(4, 1, frameBox, 'm', 150);
-		actionButtons = new OnScreenController(2, 0, frameBox, 'l', 150);
+		dPad = new OnScreenController(4, 1, frameBox, 3, 150);
+		actionButtons = new OnScreenController(2, 0, frameBox, 4, 150);
+		jStick = new OnScreenJoyStick(new Float2(200,200), new Float2(200,200), 4);
 		
 		currentBackground = new Background(BitmapFactory.decodeResource(getResources(), R.drawable.rpg_background), frameBox, createObstacles());
 	}
@@ -68,6 +72,7 @@ SurfaceHolder.Callback {
 		// FrameBox
 		obstacles.add(frameBox);
 		
+		/*
 		// Trees
 		int twidth = 34;
 		int theight = 26;
@@ -89,6 +94,7 @@ SurfaceHolder.Callback {
 		obstacles.add(new Rect(319, 0, 319 + 161, 222));
 		obstacles.add(new Rect(0, 0, 31, 33));
 		obstacles.add(new Rect(0, 32, 64, 32 + 94));
+		*/
 		
 		return obstacles;
 	}
@@ -276,6 +282,7 @@ SurfaceHolder.Callback {
 		float x, y;		 		
 		int dPadButtonTouched = -1;
 		int actionButtonTouched = -1;
+		boolean jStickTouched = false;
 		
 		final int action = e.getAction();		
 		switch( action & MotionEvent.ACTION_MASK ) {
@@ -285,6 +292,7 @@ SurfaceHolder.Callback {
 				//Calculate if a button was pressed
 				dPadButtonTouched = dPad.isTouching((int)(e.getX()), (int)(e.getY()));
 				actionButtonTouched = actionButtons.isTouching((int)(e.getX()), (int)(e.getY()));
+				jStickTouched = jStick.isTouching((int)(e.getX()), (int)(e.getY()));
 				
 				firstPointerId = e.getPointerId(0);																		
 				
@@ -310,6 +318,10 @@ SurfaceHolder.Callback {
 				
 				if ( actionButtonTouched != -1 )
 					elaine.setRunning(true);
+				
+				if ( jStickTouched ) {
+					makeToast("Touched!");
+				}
 				
 				break;
 			}
@@ -509,9 +521,12 @@ SurfaceHolder.Callback {
 		canvas.drawRect(frameBox, paint);
 		
 		//Drawing Elaine
-		elaine.draw(canvas);		
+		elaine.draw(canvas);
+		
+		//Drawing on screen controllers
 		dPad.render(canvas);
 		actionButtons.render(canvas);
+		jStick.render(canvas);
 		
 		//displayFps(canvas, avgFps);
 		if ( !floatingFPS.display(canvas) )
@@ -526,8 +541,7 @@ SurfaceHolder.Callback {
 			 elaine.update(System.currentTimeMillis(), currentBackground.getObstacles());
 			 
 		 } else {			 
-			 elaine.update(System.currentTimeMillis(), frameBox);
-			 
+			 elaine.update(System.currentTimeMillis(), frameBox);			 
 		 }
 	 }
 	 

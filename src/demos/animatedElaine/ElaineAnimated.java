@@ -153,7 +153,21 @@ public class ElaineAnimated {
 	}
 	
 	public void setRunning(boolean running) {
-		this.running = running;				
+		this.running = running;
+		
+		if ( this.running == false ) {
+			if ( this.speed.getXv() != 0 )
+				this.speed.setXv(2);
+			
+			if ( this.speed.getYv() != 0 )
+				this.speed.setYv(2);
+		} else {
+			if ( this.speed.getXv() != 0 )
+				this.speed.setXv(5);
+			
+			if ( this.speed.getYv() != 0 )
+				this.speed.setYv(5);
+		}
 	}
 	
 	//////////////////////////////////////////////
@@ -174,60 +188,31 @@ public class ElaineAnimated {
 		this.animate = true;
 		this.direction = direction;
 		
-		if ( !running ) {	///// Walking
-			if ( direction == "right") {
-				this.speed.setxDirection(Speed.DIRECTION_RIGHT);
-				this.speed.setXv(2);
-				this.speed.setYv(0);
-				this.bitmap = this.bitmapOriginal;
-			}
-			
-			if ( direction == "left") {
-				this.speed.setxDirection(Speed.DIRECTION_LEFT);
-				this.speed.setXv(2);
-				this.speed.setYv(0);
-				this.bitmap = this.bitmapReversed;
-			}
-			
-			if ( direction == "up") {
-				this.speed.setyDirection(Speed.DIRECTION_UP);
-				this.speed.setXv(0);
-				this.speed.setYv(2);
-			}
-			
-			if ( direction == "down") {
-				this.speed.setyDirection(Speed.DIRECTION_DOWN);
-				this.speed.setXv(0);
-				this.speed.setYv(2);
-			}
-		} else { ///// Running
-			if ( direction == "right") {
-				this.speed.setxDirection(Speed.DIRECTION_RIGHT);
-				this.speed.setXv(4);
-				this.speed.setYv(0);
-				this.bitmap = this.bitmapOriginal;
-			}
-			
-			if ( direction == "left") {
-				this.speed.setxDirection(Speed.DIRECTION_LEFT);
-				this.speed.setXv(4);
-				this.speed.setYv(0);
-				this.bitmap = this.bitmapReversed;
-			}
-			
-			if ( direction == "up") {
-				this.speed.setyDirection(Speed.DIRECTION_UP);
-				this.speed.setXv(0);
-				this.speed.setYv(4);
-			}
-			
-			if ( direction == "down") {
-				this.speed.setyDirection(Speed.DIRECTION_DOWN);
-				this.speed.setXv(0);
-				this.speed.setYv(4);
-			}
+		if ( direction == "right") {
+			this.speed.setxDirection(Speed.DIRECTION_RIGHT);
+			this.speed.setXv(2);
+			this.speed.setYv(0);
+			this.bitmap = this.bitmapOriginal;
 		}
 		
+		if ( direction == "left") {
+			this.speed.setxDirection(Speed.DIRECTION_LEFT);
+			this.speed.setXv(2);
+			this.speed.setYv(0);
+			this.bitmap = this.bitmapReversed;
+		}
+		
+		if ( direction == "up") {
+			this.speed.setyDirection(Speed.DIRECTION_UP);
+			this.speed.setXv(0);
+			this.speed.setYv(2);
+		}
+		
+		if ( direction == "down") {
+			this.speed.setyDirection(Speed.DIRECTION_DOWN);
+			this.speed.setXv(0);
+			this.speed.setYv(2);
+		}
 	}
 	
 	public void stop() {

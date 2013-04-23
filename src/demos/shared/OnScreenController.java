@@ -12,10 +12,10 @@ public class OnScreenController {
 	private int numButtons;
 	private OnScreenButton[] buttons;
 	private int layout;
-	private char size;
+	private int size;
 	private Rect frame;
 
-	public OnScreenController(int numButtons, int layout, int x, int y, char size, int alpha) {		
+	public OnScreenController(int numButtons, int layout, int x, int y, int size, int alpha) {		
 		this.numButtons = numButtons;
 		this.layout = layout;
 		this.alpha = alpha;	
@@ -26,7 +26,7 @@ public class OnScreenController {
 		createController();			
 	}
 	
-	public OnScreenController(int numButtons, int layout, Rect frame, char size, int alpha) {		
+	public OnScreenController(int numButtons, int layout, Rect frame, int size, int alpha) {		
 		this.numButtons = numButtons;
 		this.layout = layout;
 		this.alpha = alpha;
@@ -38,36 +38,58 @@ public class OnScreenController {
 	
 	public void createController() {
 		
-		buttons = new OnScreenButton[numButtons];		
+		buttons = new OnScreenButton[numButtons];
 		
 		if ( numButtons == 2 ) {
+			
+			buttons[0] = new OnScreenButton(size, color, alpha);
+			buttons[1] = new OnScreenButton(size, color, alpha);
+			
 			//Horizontal
 			if ( layout == 0 ) {
-				buttons[0] = new OnScreenButton(frame.right - 156, frame.bottom - 80, size, color, alpha);
-				buttons[1] = new OnScreenButton(buttons[0].getX() + buttons[0].getWidth() + 3, buttons[0].getY(), size, color, alpha);
+				buttons[0].setX(frame.right - (2*buttons[0].getWidth()) - 6);
+				buttons[0].setY(frame.bottom - buttons[0].getHeight() - 3);
+				buttons[1].setX(buttons[0].getX() + buttons[0].getWidth() + 3);
+				buttons[1].setY(frame.bottom - buttons[0].getHeight() - 3);
 			} else { //Vertical
 				
 			}
 		}
 		
 		if ( numButtons == 4 ) {
-			if ( layout == 0 ) { // On a horizontal line
-				buttons[0] = new OnScreenButton(x, y, size, color, alpha);
-				buttons[1] = new OnScreenButton(x + buttons[0].getWidth() + 3, y, size, color, alpha);
-				buttons[2] = new OnScreenButton(buttons[1].getX() + buttons[1].getWidth() + 3, y, size, color, alpha);
-				buttons[3] = new OnScreenButton(buttons[2].getX() + buttons[2].getWidth() + 3, y, size, color, alpha);
-			} else {			// On a cross shape
-				buttons[0] = new OnScreenButton(3, frame.bottom - 103, size, color, alpha);
-				buttons[1] = new OnScreenButton(buttons[0].getX() + buttons[0].getWidth(), 
-												buttons[0].getY() - buttons[0].getHeight(), 
-													size, color, alpha);
-				buttons[2] = new OnScreenButton(buttons[0].getX() + buttons[0].getWidth(), 
-												buttons[0].getY() + buttons[0].getHeight(), 
-													size, color, alpha);
-				buttons[3] = new OnScreenButton(buttons[1].getX() + buttons[0].getWidth(), 
-												buttons[1].getY() + buttons[0].getHeight(), 
-													size, color, alpha);
-								
+			
+			buttons[0] = new OnScreenButton(size, color, alpha);
+			buttons[1] = new OnScreenButton(size, color, alpha);
+			buttons[2] = new OnScreenButton(size, color, alpha);
+			buttons[3] = new OnScreenButton(size, color, alpha);
+			
+			// On a horizontal line
+			if ( layout == 0 ) { 	
+				buttons[0].setX(3);
+				buttons[0].setY(frame.bottom - buttons[0].getHeight() - 3);
+				
+				buttons[1].setX(buttons[0].getX() + buttons[0].getWidth() + 3);
+				buttons[1].setY(frame.bottom - buttons[0].getHeight() - 3);
+				
+				buttons[2].setX(buttons[1].getX() + buttons[0].getWidth() + 3);
+				buttons[2].setY(frame.bottom - buttons[0].getHeight() - 3);
+				
+				buttons[3].setX(buttons[2].getX() + buttons[0].getWidth() + 3);
+				buttons[3].setY(frame.bottom - buttons[0].getHeight() - 3);
+			} else {
+				
+				// On a cross shape				
+				buttons[0].setX(3);
+				buttons[0].setY(frame.bottom - 2*buttons[0].getHeight() - 3);
+				
+				buttons[1].setX(buttons[0].getX() + buttons[0].getWidth());
+				buttons[1].setY(buttons[0].getY() - buttons[0].getHeight());
+				
+				buttons[2].setX(buttons[0].getX() + buttons[0].getWidth());
+				buttons[2].setY(buttons[0].getY() + buttons[0].getHeight());
+				
+				buttons[3].setX(buttons[1].getX() + buttons[0].getWidth());
+				buttons[3].setY(buttons[1].getY() + buttons[0].getHeight());
 			}
 		}
 	}
