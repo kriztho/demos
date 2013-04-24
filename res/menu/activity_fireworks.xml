@@ -1,0 +1,54 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item 
+        android:id="@+id/decFireworks" 
+        android:icon="@drawable/decrease" 
+        android:title="Dec Explosions"/>
+    <item android:id="@+id/incFireworks" 
+        android:icon="@drawable/increase" 
+        android:title="Inc Explosions"/>
+    
+    <item 
+        android:id="@+id/decExplosions" 
+        android:icon="@drawable/decrease"  
+        android:title="Dec Particles"/>
+    <item android:id="@+id/incExplosions" 
+        android:icon="@drawable/increase"  
+        android:title="Inc Particles"/>
+    
+    <item 
+        android:id="@+id/decMaxPartSize" 
+        android:icon="@drawable/decrease"  
+        android:title="Dec MaxPartSize"/>
+    <item android:id="@+id/incMaxPartSize" 
+        android:icon="@drawable/increase"  
+        android:title="Inc MaxPartSize"/>
+    
+    <item 
+        android:id="@+id/decFadeOutFactor" 
+        android:icon="@drawable/decrease"  
+        android:title="Dec FadeOutFactor"/>
+    <item android:id="@+id/incFadeOutFactor" 
+        android:icon="@drawable/increase"  
+        android:title="Inc FadeOutFactor"/>
+    
+        <item 
+        android:id="@+id/decDefaultLifetime" 
+        android:icon="@drawable/decrease"  
+        android:title="Dec DefaultLifetime"/>
+    <item android:id="@+id/incDefaultLifetime" 
+        android:icon="@drawable/increase"  
+        android:title="Inc DefaultLifetime"/>
+    
+    <item 
+        android:id="@+id/decMaxPartSpeed" 
+        android:icon="@drawable/decrease"  
+        android:title="Dec MaxPartSpeed"/>
+    <item android:id="@+id/incMaxPartSpeed" 
+        android:icon="@drawable/increase"  
+        android:title="Inc MaxPartSpeed"/>
+    
+    <item android:id="@+id/setDrawMode" 
+        android:icon="@drawable/increase"  
+        android:title="Set DrawMode Default"/>
+        
+</menu>

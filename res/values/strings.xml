@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Droids</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="menu_settings">Settings</string>
+    <string name="warning">Robots are rising</string>
+    <string name="demo_list">Demo List</string>
+    <string name="title_activity_launch_demo">LaunchDemo</string>
+    <string name="title_activity_preferences">Preferences</string>
+    <string name="title_activity_pref_droidz">PrefDroidz</string>
+    <string name="title_activity_droidz">DroidzActivity</string>
+    <string name="title_activity_animated_elaine">AnimatedElaineActivity</string>
+    <string name="title_activity_fireworks">FireworksActivity</string>
+    <string name="title_activity_fireworks_prefs">FireworksPrefs</string>
+
+</resources>

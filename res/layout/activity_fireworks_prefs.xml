@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" >
+
+    <PreferenceCategory android:title="Droids Speed">
+        <!--
+        <Preference android:id="@+id/txtViewSpeedFactor"/>
+        -->
+
+	    <Preference android:key="increaseSpeed" 
+	                android:title="Increase"
+	                android:summary="Increase speed of Droids" />
+	    
+	    <Preference android:key="decreaseSpeed" 
+	                android:title="Decrease"
+	                android:summary="Decrease speed of Droids" />
+    
+    </PreferenceCategory>
+    
+    <PreferenceCategory android:title="Number of Droids">
+    
+	    <Preference android:key="increaseDroids" 
+		         	android:title="Increase"
+		         	android:summary="Increase number of Droids in screen" />
+	    
+	    <Preference android:key="decreaseDroids" 
+		         	android:title="Decrease"
+		         	android:summary="Decrease number of Droids in screen" />
+	    
+    </PreferenceCategory>
+    
+	<PreferenceCategory android:title="About Message">
+	    <EditTextPreference
+	           	android:key="aboutMsg"
+	            android:title="About Message" 
+	            android:summary="Define the About Message to be shown"
+	            android:dialogTitle="About Message"
+	            android:dialogMessage="Provide a message"    
+	            android:defaultValue="Default message" />
+
+	</PreferenceCategory>
+
+<PreferenceCategory android:title="FPS Setting">
+
+    <ListPreference android:key="fps_intervals"
+                    android:title="FPS"
+                    android:dialogTitle="Frames Per Second" 
+                    android:defaultValue="30"
+                    android:entries="@array/fpsIntervals"
+                    android:entryValues="@array/fpsIntervalValues"/>
+
+</PreferenceCategory>
+    
+</PreferenceScreen>
