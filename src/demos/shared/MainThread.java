@@ -184,9 +184,12 @@ public class MainThread extends Thread {
 					}
 					*/
 					
+					/*
 					if ( framesSkipped > 0 ){
 						Log.d(TAG, "Skipped: " + framesSkipped);						
 					}
+					*/
+					
 					// for statistics
 					framesSkippedPerStatCycle += framesSkipped;
 					// calling the routine to store the gathered statistics
@@ -195,6 +198,7 @@ public class MainThread extends Thread {
 			} catch (Exception e) {
 			     // This will catch any exception, because they are all descended from Exception
 				Log.d(TAG, "Exception: "+e.toString()+ "Cause: "+e.getCause());
+				e.printStackTrace();
 			} finally {
 				//in case of an exception the surface is not left in an inconsistent state
 				if (canvas != null) {
