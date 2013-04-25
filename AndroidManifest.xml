@@ -34,8 +34,8 @@
             android:label="@string/title_activity_droidz" >
         </activity>
         <activity
-            android:name="demos.animatedElaine.AnimatedElaineActivity"
-            android:screenOrientation="reverseLandscape"
+            android:name="demos.animatedElaine.AnimatedElaineActivity"            
+            android:screenOrientation="landscape"
             android:label="@string/title_activity_animated_elaine" >
         </activity>
         <activity

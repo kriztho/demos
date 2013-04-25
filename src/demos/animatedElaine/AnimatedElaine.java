@@ -76,6 +76,14 @@ SurfaceHolder.Callback {
 		dPad = new OnScreenController("button", 4, 1, frameBox, 3, 150);
 		actionButtons = new OnScreenController("button", 2, 0, frameBox, 4, 150);
 		jStick = new OnScreenController("stick", 1, 0, frameBox, 4, 150);
+		
+		floatingDisplay = new FloatingDisplay(2, "topleft", Color.WHITE, getWidth(), getHeight());
+		floatingDisplay.addParam("xStick", 0.0f);
+		floatingDisplay.addParam("yStick", 0.0f);
+		floatingDisplay.addParam("xElaine", 0.0f);
+		floatingDisplay.addParam("yElaine", 0.0f);
+		floatingDisplay.addParam("theta", 0.0f);
+		floatingDisplay.addParam("direction", "");
 	}
 
 	private class GestureListener extends GestureDetector.SimpleOnGestureListener {
@@ -314,68 +322,71 @@ SurfaceHolder.Callback {
 		// Executed when a second finger touches the screen simultaneously 
 		case MotionEvent.ACTION_POINTER_DOWN: {
 
-			// Find the pointer that triggered the action
-			// Extract the index of the pointer that left the touch sensor
-			x = e.getX(firstPointerId);
-			y = e.getY(firstPointerId);
-			dPadButtonTouchedIndex = dPad.isTouching((int)x, (int)y);
-			actionButtonTouchedIndex = actionButtons.isTouching((int)x, (int)y);
+			if ( e.getPointerCount() < 2 ) {
 
-			// Find if the new pointer pressed a button too
-			final int pointerIndexNew = (action & MotionEvent.ACTION_POINTER_INDEX_MASK) 
-					>> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
-					secondPointerId = e.getPointerId(pointerIndexNew);
-					x = e.getX(secondPointerId);
-					y = e.getY(secondPointerId);
-					if ( dPadButtonTouchedIndex == -1 )
-						dPadButtonTouchedIndex = dPad.isTouching((int)x, (int)y);
+				// Find the pointer that triggered the action
+				// Extract the index of the pointer that left the touch sensor
+				x = e.getX(firstPointerId);
+				y = e.getY(firstPointerId);
+				dPadButtonTouchedIndex = dPad.isTouching((int)x, (int)y);
+				actionButtonTouchedIndex = actionButtons.isTouching((int)x, (int)y);
 
-					if ( actionButtonTouchedIndex == -1 )
-						actionButtonTouchedIndex = actionButtons.isTouching((int)x, (int)y);					
+				// Find if the new pointer pressed a button too
+				final int pointerIndexNew = (action & MotionEvent.ACTION_POINTER_INDEX_MASK) 
+						>> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+			secondPointerId = e.getPointerId(pointerIndexNew);
+			x = e.getX(secondPointerId);
+			y = e.getY(secondPointerId);
+			if ( dPadButtonTouchedIndex == -1 )
+				dPadButtonTouchedIndex = dPad.isTouching((int)x, (int)y);
 
-					// If the running button is punched plus the direction pad
-					if ( dPadButtonTouchedIndex != -1 && actionButtonTouchedIndex == 0 ) {
+			if ( actionButtonTouchedIndex == -1 )
+				actionButtonTouchedIndex = actionButtons.isTouching((int)x, (int)y);					
 
-						elaine.setRunning(true);
+			// If the running button is punched plus the direction pad
+			if ( dPadButtonTouchedIndex != -1 && actionButtonTouchedIndex == 0 ) {
 
-						switch( dPadButtonTouchedIndex ) {
-						case 0:
-							elaine.movePad("left");
-							break;
-						case 1:
-							elaine.movePad("up");
-							break;
-						case 2:
-							elaine.movePad("down");
-							break;
-						case 3:
-							elaine.movePad("right");
-							break;
-						default:
-							elaine.stop();
-							break;
-						}
-					} else if ( dPadButtonTouchedIndex != -1 ){
+				elaine.setRunning(true);
 
-						switch( dPadButtonTouchedIndex ) {
-						case 0:
-							elaine.movePad("left");
-							break;
-						case 1:
-							elaine.movePad("up");
-							break;
-						case 2:
-							elaine.movePad("down");
-							break;
-						case 3:
-							elaine.movePad("right");
-							break;
-						default:
-							elaine.stop();
-							break;
-						}
-					}
+				switch( dPadButtonTouchedIndex ) {
+				case 0:
+					elaine.movePad("left");
 					break;
+				case 1:
+					elaine.movePad("up");
+					break;
+				case 2:
+					elaine.movePad("down");
+					break;
+				case 3:
+					elaine.movePad("right");
+					break;
+				default:
+					elaine.stop();
+					break;
+				}
+			} else if ( dPadButtonTouchedIndex != -1 ){
+
+				switch( dPadButtonTouchedIndex ) {
+				case 0:
+					elaine.movePad("left");
+					break;
+				case 1:
+					elaine.movePad("up");
+					break;
+				case 2:
+					elaine.movePad("down");
+					break;
+				case 3:
+					elaine.movePad("right");
+					break;
+				default:
+					elaine.stop();
+					break;
+				}
+			}
+			break;
+			}
 		}
 
 		// When a single-touching-finger stops touching the screen
@@ -412,37 +423,40 @@ SurfaceHolder.Callback {
 
 		// When one of the simultaneous touches is raised
 		case MotionEvent.ACTION_POINTER_UP: {
+			
+			if ( e.getPointerCount() < 2 ) {
 
-			// Find the pointer that left
-			int pointerIndexNew = (action & MotionEvent.ACTION_POINTER_INDEX_MASK) 
+				// Find the pointer that left
+				int pointerIndexNew = (action & MotionEvent.ACTION_POINTER_INDEX_MASK) 
 					>> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
-					int pointerId = e.getPointerId(pointerIndexNew);
-					x = e.getX(pointerId);
-					y = e.getY(pointerId);
-					dPadButtonTouchedIndex = dPad.isTouching((int)x, (int)y);
-					actionButtonTouchedIndex = actionButtons.isTouching((int)x, (int)y);
-					jStickTouchedIndex = jStick.isTouching((int)x, (int)y);
+				int pointerId = e.getPointerId(pointerIndexNew);
+				x = e.getX(pointerId);
+				y = e.getY(pointerId);
+				dPadButtonTouchedIndex = dPad.isTouching((int)x, (int)y);
+				actionButtonTouchedIndex = actionButtons.isTouching((int)x, (int)y);
+				jStickTouchedIndex = jStick.isTouching((int)x, (int)y);
 
-					// The object that is pointed by the one that left is the one to be released
-					if ( dPadButtonTouchedIndex != -1 ) {
-						dPad.release(dPadButtonTouchedIndex);
-						elaine.stop();
-					}
+				// The object that is pointed by the one that left is the one to be released
+				if ( dPadButtonTouchedIndex != -1 ) {
+					dPad.release(dPadButtonTouchedIndex);
+					elaine.stop();
+				}
 
-					// Release accordingly
-					if ( actionButtonTouchedIndex != -1 ) {
-						actionButtons.release(actionButtonTouchedIndex);
-						elaine.setRunning(false);
-					}
-					
-					// Release accordingly
-					if ( jStickTouchedIndex != -1 ) {
-						jStick.release(jStickTouchedIndex);
-						jStick.reset(jStickTouchedIndex);
-						elaine.stop();
-					}
+				// Release accordingly
+				if ( actionButtonTouchedIndex != -1 ) {
+					actionButtons.release(actionButtonTouchedIndex);
+					elaine.setRunning(false);
+				}
+				
+				// Release accordingly
+				if ( jStickTouchedIndex != -1 ) {
+					jStick.release(jStickTouchedIndex);
+					jStick.reset(jStickTouchedIndex);
+					elaine.stop();
+				}
 
-					break;
+				break;
+			}
 		}
 
 		// When the finger drags around
@@ -556,6 +570,17 @@ SurfaceHolder.Callback {
 		//displayFps(canvas, avgFps);
 		if ( !floatingFPS.display(canvas) )
 			makeToast("Error. There was a problem displaying FPS");
+		
+		floatingDisplay.updateParam("xStick", jStick.getSpeed(0).getXv());
+		floatingDisplay.updateParam("yStick", jStick.getSpeed(0).getYv());
+		floatingDisplay.updateParam("xElaine", elaine.getSpeed().getXv());
+		floatingDisplay.updateParam("yElaine", elaine.getSpeed().getYv());
+		floatingDisplay.updateParam("theta", jStick.getSticks()[0].getTheta());
+		floatingDisplay.updateParam("direction", jStick.getSticks()[0].getDirection());
+		
+		if ( !floatingDisplay.display(canvas)){
+			makeToast("Error. There was a problem with display");
+		}
 
 	}
 

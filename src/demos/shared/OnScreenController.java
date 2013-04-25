@@ -204,4 +204,13 @@ public class OnScreenController {
 	public Speed getSpeed(int index) {
 		return sticks[index].getSpeed();
 	}
+
+	
+	public OnScreenJoyStick[] getSticks() {
+		return sticks;
+	}
+
+	public void setSticks(OnScreenJoyStick[] sticks) {
+		this.sticks = sticks;
+	}
 }
