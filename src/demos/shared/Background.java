@@ -19,6 +19,17 @@ public class Background {
 	private ArrayList<Rect> obstacles;
 	private boolean collisionDetection = true;
 	private Rect frameBox;
+	
+	public Background(Bitmap bitmap, Rect frameBox) {
+		this.bitmap = bitmap;
+		this.width = bitmap.getWidth();
+		this.height = bitmap.getHeight();
+		this.frameBox = frameBox;
+		
+		this.collisionDetection = true;
+		obstacles = new ArrayList<Rect>();
+		loadObstacles();
+	}
 
 	public Background(Bitmap bitmap, Rect frameBox, ArrayList<Rect> obstacles) {
 		this.bitmap = bitmap;
@@ -32,8 +43,36 @@ public class Background {
 		//loadObstacles();
 	}
 	
-	// It should load from a file or something static way
 	public void loadObstacles() {
+		
+		// adding the outer frame
+		obstacles.add(frameBox);
+		
+		/*
+		// Trees
+		int twidth = 34;
+		int theight = 26;
+		obstacles.add(new Rect(64, 0, 64 + twidth, 0 + theight));
+		obstacles.add(new Rect(114, 37, 114 + twidth, 37 + theight));
+		obstacles.add(new Rect(177, 35, 177 + twidth, 35 + theight));
+		obstacles.add(new Rect(196, 103, 196 + twidth, 103 + theight));
+		obstacles.add(new Rect(161, 134, 161 + twidth, 134 + theight));		
+		obstacles.add(new Rect(127, 197, 127 + twidth, 197 + theight));		
+		obstacles.add(new Rect(33, 197, 33 + twidth, 197 + theight));
+		obstacles.add(new Rect(1, 261, 1 + twidth, 261 + theight));
+		*/
+		
+		// Water
+		obstacles.add(new Rect(1, 480, 1193, 687));
+		
+		// Hills
+		//obstacles.add(new Rect(319 / bitmap.getWidth() * frameBox.width(), 0, frameBox.width(), 222 / bitmap.getHeight() * frameBox.height()));
+		obstacles.add(new Rect(800, 1, 1193, 480));
+		obstacles.add(new Rect(1, 1, 160, 270));
+	}
+	
+	// It should load from a file or something static way
+	public void loadObstacles(ArrayList<Rect> obstacles) {
 		
 		// Outer frame
 		obstacles.add(new Rect(0,0,getBitmap().getWidth(), getBitmap().getHeight()));
@@ -59,6 +98,10 @@ public class Background {
 		obstacles.add(new Rect(319, 0, 319 + 161, 222));
 		obstacles.add(new Rect(0, 0, 31, 33));
 		obstacles.add(new Rect(0, 32, 64, 32 + 94));
+	}
+	
+	public void addObstacle(Rect obstacle) {
+		obstacles.add(obstacle);
 	}
 
 	public Bitmap getBitmap() {
@@ -110,9 +153,10 @@ public class Background {
 		canvas.drawBitmap(bitmap, null, frameBox, null);
 		
 		Paint paint = new Paint();
-		paint.setColor(Color.RED);
+		paint.setColor(Color.YELLOW);
 		paint.setStyle(Style.STROKE);
-		for ( int i = 0 ; i < obstacles.size(); i++)
+		paint.setStrokeWidth(3);
+		for ( int i = 1 ; i < obstacles.size(); i++)
 			canvas.drawRect(obstacles.get(i), paint);
 	}
 }

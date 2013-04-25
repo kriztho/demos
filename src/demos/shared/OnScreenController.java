@@ -109,7 +109,7 @@ public class OnScreenController {
 			buttons = null;
 			
 			for ( int i = 0; i < numButtons; i++ ) {
-				sticks[i] = new OnScreenJoyStick(new Float2(200,200), 4);
+				sticks[i] = new OnScreenJoyStick(new Float2(203,485), 4);
 			}
 		}
 	}

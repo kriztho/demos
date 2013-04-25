@@ -70,45 +70,12 @@ SurfaceHolder.Callback {
 
 		// Framebox delimits the videogame screen-area
 		frameBox = new Rect(0, 0, getWidth(), getHeight());
-		currentBackground = new Background(BitmapFactory.decodeResource(getResources(), R.drawable.rpg_background), frameBox, createObstacles());
+		currentBackground = new Background(BitmapFactory.decodeResource(getResources(), R.drawable.rpg_background), frameBox);
 
 		// Controllers
 		dPad = new OnScreenController("button", 4, 1, frameBox, 3, 150);
 		actionButtons = new OnScreenController("button", 2, 0, frameBox, 4, 150);
 		jStick = new OnScreenController("stick", 1, 0, frameBox, 4, 150);
-	}
-
-	public ArrayList<Rect> createObstacles() {
-
-		ArrayList<Rect> obstacles = new ArrayList<Rect>();
-
-		// FrameBox
-		obstacles.add(frameBox);
-
-
-		// Trees
-		int twidth = 34;
-		int theight = 26;
-		obstacles.add(new Rect(64, 0, 64 + twidth, 0 + theight));
-		obstacles.add(new Rect(114, 37, 114 + twidth, 37 + theight));
-		obstacles.add(new Rect(177, 35, 177 + twidth, 35 + theight));
-		obstacles.add(new Rect(196, 103, 196 + twidth, 103 + theight));
-		obstacles.add(new Rect(161, 134, 161 + twidth, 134 + theight));		
-		obstacles.add(new Rect(127, 197, 127 + twidth, 197 + theight));		
-		obstacles.add(new Rect(33, 197, 33 + twidth, 197 + theight));
-		obstacles.add(new Rect(1, 261, 1 + twidth, 261 + theight));
-
-		// Water
-		obstacles.add(new Rect(125, 219, 125 + 261, 219 + 39));
-		obstacles.add(new Rect(59, 251, 59 + 421, 251 + 37));
-		obstacles.add(new Rect(28, 282, 28 + 452, 282 + 38));
-
-		// Hills
-		obstacles.add(new Rect(319, 0, 319 + 161, 222));
-		obstacles.add(new Rect(0, 0, 31, 33));
-		obstacles.add(new Rect(0, 32, 64, 32 + 94));
-
-		return obstacles;
 	}
 
 	private class GestureListener extends GestureDetector.SimpleOnGestureListener {
@@ -582,7 +549,7 @@ SurfaceHolder.Callback {
 		elaine.draw(canvas);
 
 		//Drawing on screen controllers
-		dPad.render(canvas);
+		//dPad.render(canvas);
 		actionButtons.render(canvas);
 		jStick.render(canvas);
 
