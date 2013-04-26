@@ -19,7 +19,8 @@ public class FloatingDisplay {
 	private int y;
 	private String position;
 	private Paint paint;
-	private int digitSize = 20; // 5 pixels per character
+	private int digitSize = 8; // 5 pixels per character
+	//private int digitSize = 20;
 	private int canvasWidth;
 	private int canvasHeight;
 	
@@ -34,7 +35,7 @@ public class FloatingDisplay {
 		
 		this.paint = new Paint();
 		paint.setColor(color);
-		paint.setTextSize(30);
+		//paint.setTextSize(30);
 	}
 	
 	public FloatingDisplay(int paramNumber, int x, int y, int color ) {
@@ -53,10 +54,12 @@ public class FloatingDisplay {
 	protected void setPositionFromShortcut(int canvasWidth, int canvasHeight, String position) {
 		if ( position == "topleft") {
 			x = 10;
-			y = 30;
+			y = 10;
+			//y = 30;
 		} else if ( position == "topright") {
 			x = canvasWidth - (paramString.length() * digitSize) - 12;
-			y = 30;
+			y = 10;
+			//y = 30;
 		} else if ( position == "bottomleft") {
 			x = 10;
 			y = canvasHeight - digitSize - 3;
@@ -191,7 +194,8 @@ public class FloatingDisplay {
 			Paint backPaint = new Paint();
 			backPaint.setColor(Color.DKGRAY);
 			backPaint.setAlpha(200);
-			canvas.drawRect(x - 5, y-25, x + paramString.length() * 14 - 3, y + 10, backPaint);
+			canvas.drawRect(x-2, y-12, x + paramString.length() * 5 + 2, y + 5, backPaint);
+			//canvas.drawRect(x - 5, y-25, x + paramString.length() * 14 - 3, y + 10, backPaint);
 			canvas.drawText(paramString, x, y, paint);
 			return true;
 		}

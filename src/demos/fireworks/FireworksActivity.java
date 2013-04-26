@@ -22,7 +22,7 @@ public class FireworksActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		
 		//request to turn the title OFF
-		//requestWindowFeature(Window.FEATURE_NO_TITLE);
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		//making it full screen
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		

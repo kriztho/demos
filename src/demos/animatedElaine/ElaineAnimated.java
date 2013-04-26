@@ -11,6 +11,7 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.MotionEvent;
 
 public class ElaineAnimated {
@@ -359,7 +360,9 @@ public class ElaineAnimated {
 
 
 		x += (speed.getXv() * speed.getxDirection());
-		y += (speed.getYv() * speed.getyDirection());			
+		y += (speed.getYv() * speed.getyDirection());
+		
+		//Log.d(TAG, "Location: "+ x +", "+ y);
 	}
 
 	public void update( long gameTime, Rect frameBox ){
@@ -384,7 +387,9 @@ public class ElaineAnimated {
 
 
 		x += (speed.getXv() * speed.getxDirection());
-		y += (speed.getYv() * speed.getyDirection());			
+		y += (speed.getYv() * speed.getyDirection());
+		
+		//Log.d(TAG, "Location: "+ x +", "+ y);
 	}
 
 }

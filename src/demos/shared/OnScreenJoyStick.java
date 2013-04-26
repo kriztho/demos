@@ -15,8 +15,8 @@ public class OnScreenJoyStick {
 	// main data
 	private Float2 origin;							// Base point
 	private Float2 endpoint;						// Current position of the finger
-	private final float maxLength = 200;			// Of the line between the origin and endpoint
-	private final float defaultSpeed = 0.5f;			// Base speed for calculations
+	private final float maxLength = 50;			// Of the line between the origin and endpoint
+	private final float defaultSpeed = 2f;			// Base speed for calculations
 
 	// derived data
 	private float currentLength;					// Current length of the line between origin and endpoint 
@@ -132,6 +132,26 @@ public class OnScreenJoyStick {
 	// Calculates and truncates the speed vector to a 8Direction system
 	public void calculate8dir(float xRel, float yRel) {
 		
+		//Determine 2-axis direction
+		if ( xRel < 0 ) {
+			speed.setxDirection(Speed.DIRECTION_RIGHT);
+			//Log.d(TAG, "Right");
+			direction = "Right+";
+		} else {
+			speed.setxDirection(Speed.DIRECTION_LEFT);
+			//Log.d(TAG, "Left");
+			direction = "Left+";
+		}
+		if ( yRel < 0 ) {			
+			speed.setyDirection(Speed.DIRECTION_DOWN);
+			//Log.d(TAG, "Down");
+			direction += "Down";
+		} else {
+			speed.setyDirection(Speed.DIRECTION_UP);
+			//Log.d(TAG, "Up");
+			direction += "Up";
+		}
+		
 		// Determine speeds in X and Y
 		float quotient = xRel / yRel;
 		if ( quotient < 0 )
@@ -142,46 +162,30 @@ public class OnScreenJoyStick {
 			speed.setXv(defaultSpeed);
 			speed.setYv(0);
 			theta = 0f;
+			direction += "H";
 		} else if ( quotient >= 1.5 && quotient < 4 ) {
-			// 22.5° -> 0.3926rad
-			speed.setXv((float) (defaultSpeed*Math.cos(0.3926))); 	
-			speed.setYv((float) (defaultSpeed*Math.sin(0.3926)));
-			theta = 22.5f;
+			// 22.5° -> 0.3926rad... Ceiling up to the closest bigger integer because
+			// position x and y are integers
+			speed.setXv((float)Math.ceil((float) (defaultSpeed*Math.cos(0.3926)))); 	
+			speed.setYv((float)Math.ceil((float) (defaultSpeed*Math.sin(0.3926))));
+			theta = 22.5f;			
 		} else if ( quotient >= 0.66 && quotient < 1.5 ) {
 			// 45°
 			speed.setXv(defaultSpeed);
 			speed.setYv(defaultSpeed);
 			theta = 45f;
 		} else if ( quotient >= 0.25 && quotient < 0.66 ) {
-			// 67.5
-			speed.setXv((float) (defaultSpeed*Math.cos(1.1780))); 	
-			speed.setYv((float) (defaultSpeed*Math.sin(1.1780)));
+			// 67.5 Ceiling up to the closest bigger integer because
+			// position x and y are integers
+			speed.setXv((float)Math.ceil((float) (defaultSpeed*Math.cos(1.1780)))); 	
+			speed.setYv((float)Math.ceil((float) (defaultSpeed*Math.sin(1.1780))));
 			theta = 67.5f;
 		} else if ( quotient < 0.25 ) {
 			// 90°
 			speed.setXv(0);
 			speed.setYv(defaultSpeed);
 			theta = 90f;
-		}
-		
-		//Determine 2-axis direction
-		if ( xRel < 0 ) {
-			speed.setxDirection(Speed.DIRECTION_RIGHT);
-			Log.d(TAG, "Right");
-			direction = "Right+";
-		} else {			
-			speed.setxDirection(Speed.DIRECTION_LEFT);
-			Log.d(TAG, "Left");
-			direction = "Left+";
-		}
-		if ( yRel < 0 ) {			
-			speed.setyDirection(Speed.DIRECTION_DOWN);
-			Log.d(TAG, "Down");
-			direction = "Down";
-		} else {
-			speed.setyDirection(Speed.DIRECTION_UP);
-			Log.d(TAG, "Up");
-			direction = "Up";
+			direction += "V";
 		}
 	}
 
@@ -281,6 +285,7 @@ public class OnScreenJoyStick {
 		setEndpoint(origin);
 		updateHandle();
 		theta = 0;
+		direction = "";
 	}
 
 	// Updates the position of the endpoint (handle)
@@ -362,14 +367,14 @@ public class OnScreenJoyStick {
 		// Draw line from origin to endpoint
 		paint.setColor(Color.CYAN);
 		paint.setAlpha(255);
-		paint.setStrokeWidth(5);
+		paint.setStrokeWidth(2);
 		canvas.drawLine(origin.x, origin.y, endpoint.x, endpoint.y, paint);
 
 		// Draw bounding area with maxlength radius
 		paint.setColor(Color.RED);
 		paint.setAlpha(255);
 		paint.setStyle(Paint.Style.STROKE);
-		paint.setStrokeWidth(5);
+		paint.setStrokeWidth(2);
 
 		/*
 		canvas.drawRect(origin.x - (int)(maxLength), //left 

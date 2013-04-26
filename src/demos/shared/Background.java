@@ -63,12 +63,18 @@ public class Background {
 		*/
 		
 		// Water
-		obstacles.add(new Rect(1, 480, 1193, 687));
+		//obstacles.add(new Rect(1, 480, 1193, 687));
+		obstacles.add(new Rect(125, 219, 125 + 261, 219 + 39));
+		obstacles.add(new Rect(59, 251, 59 + 421, 251 + 37));
+		obstacles.add(new Rect(28, 282, 28 + 452, 282 + 38));
 		
 		// Hills
 		//obstacles.add(new Rect(319 / bitmap.getWidth() * frameBox.width(), 0, frameBox.width(), 222 / bitmap.getHeight() * frameBox.height()));
-		obstacles.add(new Rect(800, 1, 1193, 480));
-		obstacles.add(new Rect(1, 1, 160, 270));
+		//obstacles.add(new Rect(800, 1, 1193, 480));
+		//obstacles.add(new Rect(1, 1, 160, 270));
+		obstacles.add(new Rect(319, 0, 319 + 161, 222));
+		obstacles.add(new Rect(0, 0, 31, 33));
+		obstacles.add(new Rect(0, 32, 64, 32 + 94));
 	}
 	
 	// It should load from a file or something static way

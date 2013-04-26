@@ -74,16 +74,16 @@ SurfaceHolder.Callback {
 
 		// Controllers
 		dPad = new OnScreenController("button", 4, 1, frameBox, 3, 150);
-		actionButtons = new OnScreenController("button", 2, 0, frameBox, 4, 150);
-		jStick = new OnScreenController("stick", 1, 0, frameBox, 4, 150);
+		actionButtons = new OnScreenController("button", 2, 0, frameBox, 2, 150);
+		jStick = new OnScreenController("stick", 1, 0, frameBox, 1, 150);
 		
 		floatingDisplay = new FloatingDisplay(2, "topleft", Color.WHITE, getWidth(), getHeight());
-		floatingDisplay.addParam("xStick", 0.0f);
-		floatingDisplay.addParam("yStick", 0.0f);
+		//floatingDisplay.addParam("xStick", 0.0f);
+		//floatingDisplay.addParam("yStick", 0.0f);
 		floatingDisplay.addParam("xElaine", 0.0f);
 		floatingDisplay.addParam("yElaine", 0.0f);
-		floatingDisplay.addParam("theta", 0.0f);
-		floatingDisplay.addParam("direction", "");
+		//floatingDisplay.addParam("theta", 0.0f);
+		//floatingDisplay.addParam("direction", "");
 	}
 
 	private class GestureListener extends GestureDetector.SimpleOnGestureListener {
@@ -571,12 +571,12 @@ SurfaceHolder.Callback {
 		if ( !floatingFPS.display(canvas) )
 			makeToast("Error. There was a problem displaying FPS");
 		
-		floatingDisplay.updateParam("xStick", jStick.getSpeed(0).getXv());
-		floatingDisplay.updateParam("yStick", jStick.getSpeed(0).getYv());
+		//floatingDisplay.updateParam("xStick", jStick.getSpeed(0).getXv());
+		//floatingDisplay.updateParam("yStick", jStick.getSpeed(0).getYv());
 		floatingDisplay.updateParam("xElaine", elaine.getSpeed().getXv());
 		floatingDisplay.updateParam("yElaine", elaine.getSpeed().getYv());
-		floatingDisplay.updateParam("theta", jStick.getSticks()[0].getTheta());
-		floatingDisplay.updateParam("direction", jStick.getSticks()[0].getDirection());
+		//floatingDisplay.updateParam("theta", jStick.getSticks()[0].getTheta());
+		//floatingDisplay.updateParam("direction", jStick.getSticks()[0].getDirection());
 		
 		if ( !floatingDisplay.display(canvas)){
 			makeToast("Error. There was a problem with display");

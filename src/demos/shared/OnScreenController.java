@@ -109,7 +109,8 @@ public class OnScreenController {
 			buttons = null;
 			
 			for ( int i = 0; i < numButtons; i++ ) {
-				sticks[i] = new OnScreenJoyStick(new Float2(203,485), 4);
+				sticks[i] = new OnScreenJoyStick(new Float2(50, 320 - 50), size);
+				//sticks[i] = new OnScreenJoyStick(new Float2(sticks[0].getMaxLength(), frame.height() - sticks[0].getMaxLength()*2), 4);
 			}
 		}
 	}
