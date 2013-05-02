@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<background id="rpg_background" type="rpg">
+    <file name="rpg_background" extension="png" width="480" height="320" leftLimit="1" topLimit="1" rightLimit="1" bottomLimit="1"></file>
+    
+	<obstacles>
+		<!-- Water -->
+	    <item left="1" top="560" right="1193" bottom="767"></item>
+	    
+	    <!-- Hills -->
+		<item left="800" top="1" right="1193" bottom="560"></item>
+		<item left="1" top="1" right="160" bottom="320"></item>
+		
+	</obstacles>
+</background>

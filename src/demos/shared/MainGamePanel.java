@@ -1,5 +1,7 @@
 package demos.shared;
 
+import java.util.Currency;
+
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -25,6 +27,7 @@ public class MainGamePanel extends SurfaceView implements
 	protected String[] floatingInfoArray;
 	protected String floatingInfo;
 	protected FloatingDisplay floatingFPS;
+	protected boolean running = false;
 
 	public MainGamePanel(Context context) {	
 		super(context);
@@ -64,41 +67,48 @@ public class MainGamePanel extends SurfaceView implements
 			//Create the game loop thread
 			thread = new MainThread(getHolder(), this);
 		}
+
+		 // Starting the rendering process before the thread starts
+		 //running = true;
 		 
+		 // Framing box for collisiong detection
+		 frameBox = new Rect(10, 10, getWidth()-10, getHeight()-30);
+
+		 //Init floating
+		 floatingFPS = new FloatingDisplay(1, "topright", Color.WHITE, getWidth(), getHeight());
+		 floatingFPS.addParam("fps", 0);
+			
+		 // Last thing on this routine is the thread starting call
 		 thread.setRunning(true);
 		 thread.start();
-		 
-		// Framing box for collisiong detection
-		frameBox = new Rect(10, 10, getWidth()-10, getHeight()-30);
-		
-		//Init floating
-		floatingFPS = new FloatingDisplay(1, "topright", Color.WHITE, getWidth(), getHeight());
-		floatingFPS.addParam("fps", 0);
 	 }
 
 	@Override
 	public void surfaceDestroyed(SurfaceHolder holder) {
 		
-		 //tell the thread to shut down and wait for it to finish
-		 //this is a clean shutdown
-		 boolean retry = true;
-		 while ( retry ) {
-			 try {
-				 //Stopping the thread loop
-				 thread.setRunning(false);
-				 //Stopping the activity before joining the thread
-				 //((Activity)getContext()).finish();
-				 
-				 //Joining the thread
-				 thread.join();
-				 retry = false;			
-				 
-			 } catch ( InterruptedException e) {
-				 //try again shutting down the thread
-				 Log.d(TAG, "Excepction caught: "+ e.getMessage());
-			 }
-		 }
-		 Log.d(TAG, "Thread was shut down cleanly");
+		running = false;	//Local running variable to stop rendering
+
+		//tell the thread to shut down and wait for it to finish
+		//this is a clean shutdown
+		boolean retry = true;
+		while ( retry ) {
+			try {
+				//Stopping the thread loop
+				thread.setRunning(false);
+
+				//Stopping the activity before joining the thread
+				//((Activity)getContext()).finish();
+
+				//Joining the thread
+				thread.join();
+				retry = false;			
+
+			} catch ( InterruptedException e) {
+				//try again shutting down the thread
+				Log.d(TAG, "Excepction caught: "+ e.getMessage());
+			}
+		}
+		Log.d(TAG, "Thread was shut down cleanly");
 	 }
 
 	@Override

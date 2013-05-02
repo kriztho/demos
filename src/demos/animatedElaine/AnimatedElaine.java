@@ -1,6 +1,9 @@
 package demos.animatedElaine;
 
+import java.io.IOException;
 import java.util.ArrayList;
+
+import org.xmlpull.v1.XmlPullParserException;
 
 import com.demos.R;
 
@@ -70,12 +73,12 @@ SurfaceHolder.Callback {
 
 		// Framebox delimits the videogame screen-area
 		frameBox = new Rect(0, 0, getWidth(), getHeight());
-		currentBackground = new Background(BitmapFactory.decodeResource(getResources(), R.drawable.rpg_background), frameBox);
+		currentBackground = new Background(frameBox, "rpg_background", getContext());
 
 		// Controllers
 		dPad = new OnScreenController("button", 4, 1, frameBox, 3, 150);
-		actionButtons = new OnScreenController("button", 2, 0, frameBox, 2, 150);
-		jStick = new OnScreenController("stick", 1, 0, frameBox, 1, 150);
+		actionButtons = new OnScreenController("button", 2, 0, frameBox, 5, 150);
+		jStick = new OnScreenController("stick", 1, 0, frameBox, 4, 150);
 		
 		floatingDisplay = new FloatingDisplay(2, "topleft", Color.WHITE, getWidth(), getHeight());
 		//floatingDisplay.addParam("xStick", 0.0f);
@@ -84,6 +87,370 @@ SurfaceHolder.Callback {
 		floatingDisplay.addParam("yElaine", 0.0f);
 		//floatingDisplay.addParam("theta", 0.0f);
 		//floatingDisplay.addParam("direction", "");
+		
+		//Delaying this for avoiding nullpointerexceptions
+		running = true;
+	}
+
+	@Override
+	public boolean onTouchEvent(MotionEvent e) {
+		
+		//int count = e.getPointerCount();
+		//Log.d(TAG, "OnTouch Taps: " + count);
+
+		float x, y;							// integer version of finger coordinates		
+		int dPadButtonTouchedIndex = -1;	// index of the dPad button touched if touched. Returns -1 otherwise
+		int actionButtonTouchedIndex = -1;	// index of the action button touched if touched. Returns -1 otherwise
+		int jStickTouchedIndex = -1;		// index of the jStick touched if touched. Returns -1 otherwise
+
+		// This part implements multitouch finger recognition depending on the pointers
+		final int action = e.getAction();		
+		switch( action & MotionEvent.ACTION_MASK ) {	// ACTION_MASK is used for identifying single o multiple touches
+
+		// One finger touched down the screen
+		case  MotionEvent.ACTION_DOWN:{
+
+			//Calculate if a button was pressed and return the index if touched
+			dPadButtonTouchedIndex = dPad.isTouching((int)(e.getX()), (int)(e.getY()));
+			actionButtonTouchedIndex = actionButtons.isTouching((int)(e.getX()), (int)(e.getY()));
+			jStickTouchedIndex = jStick.isTouchingNoChange((int)(e.getX()), (int)(e.getY()));
+
+			// Catches the first finger to touch and stores it as the firstPointerId
+			firstPointerId = e.getPointerId(0);																		
+
+			// Determines the action to one finger touched the dPad
+			if ( dPadButtonTouchedIndex != -1 ) {
+				switch( dPadButtonTouchedIndex ) {
+				case 0:
+					elaine.movePad("left");
+					break;
+				case 1:
+					elaine.movePad("up");
+					break;
+				case 2:
+					elaine.movePad("down");
+					break;
+				case 3:
+					elaine.movePad("right");
+					break;
+				default:
+					elaine.stop();
+					break;
+				}
+			}
+
+			// Activates the corresponding action button effect. Currently only one button is considered.
+			if ( actionButtonTouchedIndex != -1 )
+				elaine.setRunning(true);
+
+			// Activates the corresponding joystick if touched
+			if ( jStickTouchedIndex != -1 ) {
+				jStick.touch(jStickTouchedIndex);
+			}
+
+			break;
+		}
+
+		// Executed when a second finger touches the screen simultaneously 
+		case MotionEvent.ACTION_POINTER_DOWN: {
+
+			if ( e.getPointerCount() < 2 ) {
+
+				// Find the pointer that triggered the action
+				// Extract the index of the pointer that left the touch sensor
+				x = e.getX(firstPointerId);
+				y = e.getY(firstPointerId);
+				dPadButtonTouchedIndex = dPad.isTouching((int)x, (int)y);
+				actionButtonTouchedIndex = actionButtons.isTouching((int)x, (int)y);
+
+				// Find if the new pointer pressed a button too
+				final int pointerIndexNew = (action & MotionEvent.ACTION_POINTER_INDEX_MASK) 
+						>> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+			secondPointerId = e.getPointerId(pointerIndexNew);
+			x = e.getX(secondPointerId);
+			y = e.getY(secondPointerId);
+			if ( dPadButtonTouchedIndex == -1 )
+				dPadButtonTouchedIndex = dPad.isTouching((int)x, (int)y);
+
+			if ( actionButtonTouchedIndex == -1 )
+				actionButtonTouchedIndex = actionButtons.isTouching((int)x, (int)y);					
+
+			// If the running button is punched plus the direction pad
+			if ( dPadButtonTouchedIndex != -1 && actionButtonTouchedIndex == 0 ) {
+
+				elaine.setRunning(true);
+
+				switch( dPadButtonTouchedIndex ) {
+				case 0:
+					elaine.movePad("left");
+					break;
+				case 1:
+					elaine.movePad("up");
+					break;
+				case 2:
+					elaine.movePad("down");
+					break;
+				case 3:
+					elaine.movePad("right");
+					break;
+				default:
+					elaine.stop();
+					break;
+				}
+			} else if ( dPadButtonTouchedIndex != -1 ){
+
+				switch( dPadButtonTouchedIndex ) {
+				case 0:
+					elaine.movePad("left");
+					break;
+				case 1:
+					elaine.movePad("up");
+					break;
+				case 2:
+					elaine.movePad("down");
+					break;
+				case 3:
+					elaine.movePad("right");
+					break;
+				default:
+					elaine.stop();
+					break;
+				}
+			}
+			break;
+			}
+		}
+
+		// When a single-touching-finger stops touching the screen
+		case MotionEvent.ACTION_UP: {
+
+			// Check for the touched buttons to be released
+			x = e.getX();
+			y = e.getY();				
+			dPadButtonTouchedIndex = dPad.isTouching((int)x, (int)y);
+			actionButtonTouchedIndex = actionButtons.isTouching((int)x, (int)y);
+			jStickTouchedIndex = jStick.isTouchingNoChange((int)x, (int)y);
+
+			// Release dPad button
+			if ( dPadButtonTouchedIndex != -1 ) {
+				dPad.release(dPadButtonTouchedIndex);
+				elaine.stop();
+			}
+
+			// Release running button
+			if ( actionButtonTouchedIndex != -1 ) {
+				actionButtons.release(actionButtonTouchedIndex);
+				elaine.setRunning(false);	// Stop running
+			}
+
+			// Release joystick
+			if ( jStickTouchedIndex != -1) {
+				jStick.release(jStickTouchedIndex);
+				jStick.reset(jStickTouchedIndex);
+				elaine.stop();
+			}
+
+			break;
+		}
+
+		// When one of the simultaneous touches is raised
+		case MotionEvent.ACTION_POINTER_UP: {
+
+			if ( e.getPointerCount() < 2 ) {
+
+				// Find the pointer that left
+				int pointerIndexNew = (action & MotionEvent.ACTION_POINTER_INDEX_MASK) 
+						>> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+			int pointerId = e.getPointerId(pointerIndexNew);
+			x = e.getX(pointerId);
+			y = e.getY(pointerId);
+			dPadButtonTouchedIndex = dPad.isTouching((int)x, (int)y);
+			actionButtonTouchedIndex = actionButtons.isTouching((int)x, (int)y);
+			jStickTouchedIndex = jStick.isTouching((int)x, (int)y);
+
+			// The object that is pointed by the one that left is the one to be released
+			if ( dPadButtonTouchedIndex != -1 ) {
+				dPad.release(dPadButtonTouchedIndex);
+				elaine.stop();
+			}
+
+			// Release accordingly
+			if ( actionButtonTouchedIndex != -1 ) {
+				actionButtons.release(actionButtonTouchedIndex);
+				elaine.setRunning(false);
+			}
+
+			// Release accordingly
+			if ( jStickTouchedIndex != -1 ) {
+				jStick.release(jStickTouchedIndex);
+				jStick.reset(jStickTouchedIndex);
+				elaine.stop();
+			}
+
+			break;
+			}
+		}
+
+		// When the finger drags around
+		case MotionEvent.ACTION_MOVE: {			
+
+			// All fingers/touches have to be updated accordingly
+			for ( int i = 0; i < e.getPointerCount(); i++ ) {
+
+				// HACK. To only update one control at a time. Otherwise they are both updated at the same time
+				x = e.getX(i);
+				y = e.getY(i);
+				int side = checkScreenSide((int)x, (int)y);
+
+				switch (side) {
+
+				// Left half of the screen
+				case 1:{		
+
+					// Check for touches on controls
+					dPadButtonTouchedIndex = dPad.isTouching((int)x, (int)y);
+					actionButtonTouchedIndex = actionButtons.isTouchingNoChange((int)x, (int)y);
+
+					// TODO. Active when reset mode is off, but still buggy
+					//jStickTouched = jStick.isTouchingOnly((int)x, (int)y);
+					jStickTouchedIndex = jStick.isTouching((int)x, (int)y);	
+
+					switch( dPadButtonTouchedIndex ) {
+					case 0:
+						elaine.movePad("left");
+						break;
+					case 1:
+						elaine.movePad("up");
+						break;
+					case 2:
+						elaine.movePad("down");
+						break;
+					case 3:
+						elaine.movePad("right");
+						break;
+					default:
+						elaine.stop();
+						break;
+					}
+
+					if ( jStickTouchedIndex != -1 ) {
+						jStick.drag(jStickTouchedIndex, (int)x,(int)y);
+						elaine.moveStick(jStick.getSpeed(jStickTouchedIndex));
+					}
+
+					break;
+				}
+
+				// Right half of the screen
+				case 2:{		
+
+					// Check for touches on controls
+					dPadButtonTouchedIndex = dPad.isTouchingNoChange((int)x, (int)y);
+					actionButtonTouchedIndex = actionButtons.isTouching((int)x, (int)y);
+
+					if ( actionButtonTouchedIndex == -1 )
+						elaine.setRunning(false);
+					else 
+						elaine.setRunning(true);
+
+					break;
+				}
+				default:
+					break;
+				}
+			}
+
+			break;
+		}		
+		}
+
+		return true;
+	}
+
+	public int checkScreenSide(int x, int y) {
+
+		int side = -1;
+		if ( x < getWidth() / 2 )
+			side = 1;
+		else
+			side = 2;
+
+		return side;
+	}
+
+	public void render(Canvas canvas) {
+		
+		// Running changes when OnDestroy method is being executed and thread is being joined back
+		if ( running ) {
+
+			//fills the canvas with black 
+			canvas.drawColor(Color.BLACK);
+
+			// Renders the background bitmap
+			if ( currentBackground != null ) {
+				currentBackground.render(canvas);
+			}
+
+			// Draw the stage as a containing box
+			Paint paint = new Paint();
+			paint.setColor(Color.GREEN);
+			paint.setStyle(Paint.Style.STROKE);
+			canvas.drawRect(frameBox, paint);
+
+			//Drawing Elaine
+			if ( elaine != null )
+				elaine.draw(canvas);
+
+			//Drawing on screen controllers
+			if ( dPad != null ) { 
+				//dPad.render(canvas);
+			}
+			
+			if ( actionButtons != null )
+				actionButtons.render(canvas);
+			
+			if ( jStick != null)
+				jStick.render(canvas);
+
+			//displayFps(canvas, avgFps);
+			if ( !floatingFPS.display(canvas) )
+				makeToast("Error. There was a problem displaying FPS");
+
+			if ( floatingDisplay != null ) {
+				//floatingDisplay.updateParam("xStick", jStick.getSpeed(0).getXv());
+				//floatingDisplay.updateParam("yStick", jStick.getSpeed(0).getYv());
+				floatingDisplay.updateParam("xElaine", elaine.getSpeed().getXv());
+				floatingDisplay.updateParam("yElaine", elaine.getSpeed().getYv());
+				//floatingDisplay.updateParam("theta", jStick.getSticks()[0].getTheta());
+				//floatingDisplay.updateParam("direction", jStick.getSticks()[0].getDirection());
+				
+				if ( !floatingDisplay.display(canvas)){
+					makeToast("Error. There was a problem with display");
+				}
+			}			 
+		}
+	}
+
+	public void updateElaine(){
+		
+		if ( running ) {
+	
+			if ( elaine != null ) {
+				
+				//Updating Elaine accordingly
+				if ( collisionDetection ) {		 			 
+					elaine.update(frameBox, currentBackground.getObstacles());
+				} else {			 
+					elaine.update();
+				}
+			}
+		}
+	}
+
+	// Wrapper
+	public void update() {
+
+		updateElaine();
 	}
 
 	private class GestureListener extends GestureDetector.SimpleOnGestureListener {
@@ -258,346 +625,5 @@ SurfaceHolder.Callback {
 			return false;
 		}
 
-	}
-
-	@Override
-	public boolean onTouchEvent(MotionEvent e) {
-
-		//int count = e.getPointerCount();
-		//Log.d(TAG, "OnTouch Taps: " + count);
-
-		float x, y;							// integer version of finger coordinates		
-		int dPadButtonTouchedIndex = -1;	// index of the dPad button touched if touched. Returns -1 otherwise
-		int actionButtonTouchedIndex = -1;	// index of the action button touched if touched. Returns -1 otherwise
-		int jStickTouchedIndex = -1;		// index of the jStick touched if touched. Returns -1 otherwise
-
-		// This part implements multitouch finger recognition depending on the pointers
-		final int action = e.getAction();		
-		switch( action & MotionEvent.ACTION_MASK ) {	// ACTION_MASK is used for identifying single o multiple touches
-
-		// One finger touched down the screen
-		case  MotionEvent.ACTION_DOWN:{
-
-			//Calculate if a button was pressed and return the index if touched
-			dPadButtonTouchedIndex = dPad.isTouching((int)(e.getX()), (int)(e.getY()));
-			actionButtonTouchedIndex = actionButtons.isTouching((int)(e.getX()), (int)(e.getY()));
-			jStickTouchedIndex = jStick.isTouchingNoChange((int)(e.getX()), (int)(e.getY()));
-
-			// Catches the first finger to touch and stores it as the firstPointerId
-			firstPointerId = e.getPointerId(0);																		
-
-			// Determines the action to one finger touched the dPad
-			if ( dPadButtonTouchedIndex != -1 ) {
-				switch( dPadButtonTouchedIndex ) {
-				case 0:
-					elaine.movePad("left");
-					break;
-				case 1:
-					elaine.movePad("up");
-					break;
-				case 2:
-					elaine.movePad("down");
-					break;
-				case 3:
-					elaine.movePad("right");
-					break;
-				default:
-					elaine.stop();
-					break;
-				}
-			}
-
-			// Activates the corresponding action button effect. Currently only one button is considered.
-			if ( actionButtonTouchedIndex != -1 )
-				elaine.setRunning(true);
-
-			// Activates the corresponding joystick if touched
-			if ( jStickTouchedIndex != -1 ) {
-				jStick.touch(jStickTouchedIndex);
-			}
-
-			break;
-		}
-
-		// Executed when a second finger touches the screen simultaneously 
-		case MotionEvent.ACTION_POINTER_DOWN: {
-
-			if ( e.getPointerCount() < 2 ) {
-
-				// Find the pointer that triggered the action
-				// Extract the index of the pointer that left the touch sensor
-				x = e.getX(firstPointerId);
-				y = e.getY(firstPointerId);
-				dPadButtonTouchedIndex = dPad.isTouching((int)x, (int)y);
-				actionButtonTouchedIndex = actionButtons.isTouching((int)x, (int)y);
-
-				// Find if the new pointer pressed a button too
-				final int pointerIndexNew = (action & MotionEvent.ACTION_POINTER_INDEX_MASK) 
-						>> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
-			secondPointerId = e.getPointerId(pointerIndexNew);
-			x = e.getX(secondPointerId);
-			y = e.getY(secondPointerId);
-			if ( dPadButtonTouchedIndex == -1 )
-				dPadButtonTouchedIndex = dPad.isTouching((int)x, (int)y);
-
-			if ( actionButtonTouchedIndex == -1 )
-				actionButtonTouchedIndex = actionButtons.isTouching((int)x, (int)y);					
-
-			// If the running button is punched plus the direction pad
-			if ( dPadButtonTouchedIndex != -1 && actionButtonTouchedIndex == 0 ) {
-
-				elaine.setRunning(true);
-
-				switch( dPadButtonTouchedIndex ) {
-				case 0:
-					elaine.movePad("left");
-					break;
-				case 1:
-					elaine.movePad("up");
-					break;
-				case 2:
-					elaine.movePad("down");
-					break;
-				case 3:
-					elaine.movePad("right");
-					break;
-				default:
-					elaine.stop();
-					break;
-				}
-			} else if ( dPadButtonTouchedIndex != -1 ){
-
-				switch( dPadButtonTouchedIndex ) {
-				case 0:
-					elaine.movePad("left");
-					break;
-				case 1:
-					elaine.movePad("up");
-					break;
-				case 2:
-					elaine.movePad("down");
-					break;
-				case 3:
-					elaine.movePad("right");
-					break;
-				default:
-					elaine.stop();
-					break;
-				}
-			}
-			break;
-			}
-		}
-
-		// When a single-touching-finger stops touching the screen
-		case MotionEvent.ACTION_UP: {
-
-			// Check for the touched buttons to be released
-			x = e.getX();
-			y = e.getY();				
-			dPadButtonTouchedIndex = dPad.isTouching((int)x, (int)y);
-			actionButtonTouchedIndex = actionButtons.isTouching((int)x, (int)y);
-			jStickTouchedIndex = jStick.isTouchingNoChange((int)x, (int)y);
-
-			// Release dPad button
-			if ( dPadButtonTouchedIndex != -1 ) {
-				dPad.release(dPadButtonTouchedIndex);
-				elaine.stop();
-			}
-
-			// Release running button
-			if ( actionButtonTouchedIndex != -1 ) {
-				actionButtons.release(actionButtonTouchedIndex);
-				elaine.setRunning(false);	// Stop running
-			}
-
-			// Release joystick
-			if ( jStickTouchedIndex != -1) {
-				jStick.release(jStickTouchedIndex);
-				jStick.reset(jStickTouchedIndex);
-				elaine.stop();
-			}
-
-			break;
-		}
-
-		// When one of the simultaneous touches is raised
-		case MotionEvent.ACTION_POINTER_UP: {
-			
-			if ( e.getPointerCount() < 2 ) {
-
-				// Find the pointer that left
-				int pointerIndexNew = (action & MotionEvent.ACTION_POINTER_INDEX_MASK) 
-					>> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
-				int pointerId = e.getPointerId(pointerIndexNew);
-				x = e.getX(pointerId);
-				y = e.getY(pointerId);
-				dPadButtonTouchedIndex = dPad.isTouching((int)x, (int)y);
-				actionButtonTouchedIndex = actionButtons.isTouching((int)x, (int)y);
-				jStickTouchedIndex = jStick.isTouching((int)x, (int)y);
-
-				// The object that is pointed by the one that left is the one to be released
-				if ( dPadButtonTouchedIndex != -1 ) {
-					dPad.release(dPadButtonTouchedIndex);
-					elaine.stop();
-				}
-
-				// Release accordingly
-				if ( actionButtonTouchedIndex != -1 ) {
-					actionButtons.release(actionButtonTouchedIndex);
-					elaine.setRunning(false);
-				}
-				
-				// Release accordingly
-				if ( jStickTouchedIndex != -1 ) {
-					jStick.release(jStickTouchedIndex);
-					jStick.reset(jStickTouchedIndex);
-					elaine.stop();
-				}
-
-				break;
-			}
-		}
-
-		// When the finger drags around
-		case MotionEvent.ACTION_MOVE: {			
-
-			// All fingers/touches have to be updated accordingly
-			for ( int i = 0; i < e.getPointerCount(); i++ ) {
-
-				// HACK. To only update one control at a time. Otherwise they are both updated at the same time
-				x = e.getX(i);
-				y = e.getY(i);
-				int side = checkScreenSide((int)x, (int)y);
-
-				switch (side) {
-
-				// Left half of the screen
-				case 1:{		
-
-					// Check for touches on controls
-					dPadButtonTouchedIndex = dPad.isTouching((int)x, (int)y);
-					actionButtonTouchedIndex = actionButtons.isTouchingNoChange((int)x, (int)y);
-
-					// TODO. Active when reset mode is off, but still buggy
-					//jStickTouched = jStick.isTouchingOnly((int)x, (int)y);
-					jStickTouchedIndex = jStick.isTouching((int)x, (int)y);	
-
-					switch( dPadButtonTouchedIndex ) {
-					case 0:
-						elaine.movePad("left");
-						break;
-					case 1:
-						elaine.movePad("up");
-						break;
-					case 2:
-						elaine.movePad("down");
-						break;
-					case 3:
-						elaine.movePad("right");
-						break;
-					default:
-						elaine.stop();
-						break;
-					}
-
-					if ( jStickTouchedIndex != -1 ) {
-						jStick.drag(jStickTouchedIndex, (int)x,(int)y);
-						elaine.moveStick(jStick.getSpeed(jStickTouchedIndex));
-					}
-
-					break;
-				}
-				
-				// Right half of the screen
-				case 2:{		
-
-					// Check for touches on controls
-					dPadButtonTouchedIndex = dPad.isTouchingNoChange((int)x, (int)y);
-					actionButtonTouchedIndex = actionButtons.isTouching((int)x, (int)y);
-
-					if ( actionButtonTouchedIndex == -1 )
-						elaine.setRunning(false);
-					else 
-						elaine.setRunning(true);
-
-					break;
-				}
-				default:
-					break;
-				}
-			}
-
-			break;
-		}		
-		}
-		return true;
-	}
-
-	public int checkScreenSide(int x, int y) {
-
-		int side = -1;
-		if ( x < getWidth() / 2 )
-			side = 1;
-		else
-			side = 2;
-
-		return side;
-	}
-
-	public void render(Canvas canvas) {
-		
-		//fills the canvas with black 
-		canvas.drawColor(Color.BLACK);
-		
-		// Renders the background bitmap
-		currentBackground.render(canvas);
-
-		// Draw the stage as a containing box
-		Paint paint = new Paint();
-		paint.setColor(Color.GREEN);
-		paint.setStyle(Paint.Style.STROKE);
-		canvas.drawRect(frameBox, paint);
-
-		//Drawing Elaine
-		elaine.draw(canvas);
-
-		//Drawing on screen controllers
-		//dPad.render(canvas);
-		actionButtons.render(canvas);
-		jStick.render(canvas);
-
-		//displayFps(canvas, avgFps);
-		if ( !floatingFPS.display(canvas) )
-			makeToast("Error. There was a problem displaying FPS");
-		
-		//floatingDisplay.updateParam("xStick", jStick.getSpeed(0).getXv());
-		//floatingDisplay.updateParam("yStick", jStick.getSpeed(0).getYv());
-		floatingDisplay.updateParam("xElaine", elaine.getSpeed().getXv());
-		floatingDisplay.updateParam("yElaine", elaine.getSpeed().getYv());
-		//floatingDisplay.updateParam("theta", jStick.getSticks()[0].getTheta());
-		//floatingDisplay.updateParam("direction", jStick.getSticks()[0].getDirection());
-		
-		if ( !floatingDisplay.display(canvas)){
-			makeToast("Error. There was a problem with display");
-		}
-
-	}
-
-	public void updateElaine(){
-
-		//Updating Elaine accordingly
-		if ( collisionDetection ) {		 			 
-			elaine.update(System.currentTimeMillis(), currentBackground.getObstacles());
-
-		} else {			 
-			elaine.update(System.currentTimeMillis(), frameBox);			 
-		}
-	}
-
-	// Wrapper
-	public void update() {
-
-		updateElaine();
 	}
 }

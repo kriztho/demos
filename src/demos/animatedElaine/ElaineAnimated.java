@@ -246,7 +246,7 @@ public class ElaineAnimated {
 		this.speed.setYv(0);
 	}
 
-	public void detectCollisionsInside(Rect box) {
+	public void detectCollisionsInside(Rect box, Rect limits) {
 
 		int dxdir = this.getSpeed().getxDirection();
 		int dydir = this.getSpeed().getyDirection();
@@ -256,20 +256,64 @@ public class ElaineAnimated {
 		int dbottom = this.getY() + this.getSpriteHeight();
 
 		// check collision with right wall
-		if (dxdir == Speed.DIRECTION_RIGHT && dright >= box.right) 
+		if (dxdir == Speed.DIRECTION_RIGHT && dright >= box.right && limits.right == 1) 
 			this.stopX();
 
 		// check collision with left wall 
-		if (dxdir == Speed.DIRECTION_LEFT && dleft <= box.left)
+		if (dxdir == Speed.DIRECTION_LEFT && dleft <= box.left && limits.left == 1)
 			this.stopX();		
 
 		// check collision with bottom wall 
-		if (dydir == Speed.DIRECTION_DOWN && dbottom >= box.bottom) 
+		if (dydir == Speed.DIRECTION_DOWN && dbottom >= box.bottom && limits.bottom == 1) 
 			this.stopY();
 
 		// check collision with top wall
-		if (dydir == Speed.DIRECTION_UP && dtop <= box.top)
+		if (dydir == Speed.DIRECTION_UP && dtop <= box.top && limits.top == 1)
 			this.stopY();
+	}
+	
+	public String detectCollisionDebug(Rect box) {
+		
+		String collision = "none";
+		
+		int dxdir = this.getSpeed().getxDirection();
+		int dydir = this.getSpeed().getyDirection();
+		int dright = this.getX() + this.getSpriteWidth();
+		int dleft = this.getX();
+		int dtop = this.getY() + this.getSpriteHeight() / 2; // only colliding with the lower half of the sprite 
+		int dbottom = this.getY() + this.getSpriteHeight();
+
+
+		// check collision with left wall if heading right
+		if (dxdir == Speed.DIRECTION_RIGHT && dright >= box.left && dright < box.left + 2 
+				&& ((dtop <= box.top && dbottom >= box.top) 
+						|| (dtop >= box.top && dtop <= box.bottom))) {
+			collision = "right";
+		}
+
+
+		// check collision with right wall if heading left
+		if (dxdir == Speed.DIRECTION_LEFT && dleft <= box.right && dleft > box.right - 2
+				&& ((dtop <= box.top && dbottom >= box.top) 
+						|| (dtop >= box.top && dtop <= box.bottom))) {
+			collision = "left";
+		}
+
+		// check collision with bottom wall if heading down
+		if (dydir == Speed.DIRECTION_DOWN && dbottom >= box.top && dbottom < box.top + 2
+				&& ((dleft <= box.left && dright >= box.left) 
+						|| (dleft >= box.left && dleft <= box.right))) {
+			collision = "down";
+		}
+
+		// check collision with top wall if heading up
+		if (dydir == Speed.DIRECTION_UP && dtop <= box.bottom && dtop > box.bottom - 2
+				&& ((dleft <= box.left && dright >= box.left) 
+						|| (dleft >= box.left && dleft <= box.right))) {
+			collision = "up";
+		}
+		
+		return collision;
 	}
 
 	public void detectCollisionsOutside(Rect box) {		
@@ -314,12 +358,12 @@ public class ElaineAnimated {
 
 	public void detectCollisions( ArrayList<Rect> obstacles ) {
 
-		// Assuming framebox is in the first location
-		detectCollisionsInside(obstacles.get(0));
-
 		// Detecting collisions 
 		for ( int i = 1; i < obstacles.size(); i++ ) {
-			detectCollisionsOutside(obstacles.get(i));
+			//String tmp = detectCollisionDebug(obstacles.get(i));
+			//if ( tmp != "none" )
+				detectCollisionsOutside(obstacles.get(i));
+				//Log.w(TAG, tmp);
 		}		
 	}
 
@@ -337,15 +381,41 @@ public class ElaineAnimated {
 					150 + destRect.height(), paint);
 		}
 	}
+	
+	public void update(){
+		if ( animate ) {			
 
-	public void update( long gameTime, ArrayList<Rect> obstacles ){
+			if (System.currentTimeMillis() > frameTicker + framePeriod){
+				frameTicker = System.currentTimeMillis();
 
+				// increment the frame
+				currentFrame++;
+				if ( currentFrame >= frameNr ) {
+					currentFrame = 0;
+				}
+			}
+		}
+		// define the rectangle to cut out sprite
+		this.sourceRect.left = currentFrame * spriteWidth;
+		this.sourceRect.right = this.sourceRect.left + spriteWidth;
+
+
+		x += (speed.getXv() * speed.getxDirection());
+		y += (speed.getYv() * speed.getyDirection());
+	}
+
+	public void update( Rect framebox, ArrayList<Rect> obstacles ){
+		
 		if ( animate ) {
 
+			// Checking up against the framebox with the obstacle info in the first position
+			detectCollisionsInside(framebox, obstacles.get(0));	
+
+			// Checking up against obstacles within the background
 			detectCollisions(obstacles);
 
-			if (gameTime > frameTicker + framePeriod){
-				frameTicker = gameTime;
+			if (System.currentTimeMillis() > frameTicker + framePeriod){
+				frameTicker = System.currentTimeMillis();
 
 				// increment the frame
 				currentFrame++;
@@ -363,16 +433,17 @@ public class ElaineAnimated {
 		y += (speed.getYv() * speed.getyDirection());
 		
 		//Log.d(TAG, "Location: "+ x +", "+ y);
+		
 	}
 
-	public void update( long gameTime, Rect frameBox ){
-
+	public void update( Rect frameBox, Rect frameLimits ){
+		
 		if ( animate ) {
 
-			detectCollisionsInside(frameBox);
+			detectCollisionsInside(frameBox, frameLimits);
 
-			if (gameTime > frameTicker + framePeriod){
-				frameTicker = gameTime;
+			if (System.currentTimeMillis() > frameTicker + framePeriod){
+				frameTicker = System.currentTimeMillis();
 
 				// increment the frame
 				currentFrame++;

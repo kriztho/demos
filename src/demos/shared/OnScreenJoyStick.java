@@ -15,7 +15,7 @@ public class OnScreenJoyStick {
 	// main data
 	private Float2 origin;							// Base point
 	private Float2 endpoint;						// Current position of the finger
-	private final float maxLength = 50;			// Of the line between the origin and endpoint
+	private final float maxLength = 200;			// Of the line between the origin and endpoint
 	private final float defaultSpeed = 2f;			// Base speed for calculations
 
 	// derived data
