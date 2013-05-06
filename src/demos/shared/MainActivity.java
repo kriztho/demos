@@ -5,6 +5,7 @@ import com.demos.R;
 import demos.animatedElaine.AnimatedElaineActivity;
 import demos.droids.DroidzActivity;
 import demos.fireworks.FireworksActivity;
+import demos.glviewer.GLViewerActivity;
 import android.os.Bundle;
 import android.app.ListActivity;
 import android.content.Intent;
@@ -68,7 +69,8 @@ public class MainActivity extends ListActivity implements OnItemClickListener {
 		String[] menu = new String[] {
 		        "1. Droidz",
 		        "2. Animate Elaine",
-		        "3. Fireworks"
+		        "3. Fireworks",
+		        "4. OpenGL Viewer"
 		};
 		
 		// Configure the list
@@ -130,6 +132,9 @@ public class MainActivity extends ListActivity implements OnItemClickListener {
 				break;
 			case 3:
 				demo = new Intent(getApplicationContext(), FireworksActivity.class);
+				break;
+			case 4:
+				demo = new Intent(getApplicationContext(), GLViewerActivity.class);
 				break;
 		}
 		

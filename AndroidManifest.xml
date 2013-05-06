@@ -6,6 +6,10 @@
     <uses-sdk
         android:minSdkVersion="8"
         android:targetSdkVersion="17" />
+    
+    <uses-feature 
+        android:glEsVersion="0x00020000" 
+        android:required="true" />
 
     <application
         android:allowBackup="true"
@@ -45,6 +49,10 @@
         <activity
             android:name="demos.fireworks.FireworksPrefs"
             android:label="@string/title_activity_fireworks_prefs" >
+        </activity>
+        <activity
+            android:name="demos.glviewer.GLViewerActivity" 
+            android:label="@string/title_activity_glviewer" >
         </activity>
         
     </application>
