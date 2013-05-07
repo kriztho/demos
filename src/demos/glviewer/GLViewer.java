@@ -16,7 +16,7 @@ public class GLViewer extends GLSurfaceView {
 		
 		// Render the view only when there is a change in the drawing data
 		//This setting prevents the GLSurfaceView frame from being redrawn until you call requestRender(), which is more efficient for this sample app
-		setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+		//setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 		
 		setFocusable(true);
 	}
