@@ -51,17 +51,19 @@ public class GLRenderer implements GLSurfaceView.Renderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
         // Set the camera position (View matrix)
-        Matrix.setLookAtM(mVMatrix, 0, 0, 0, -5, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
-
-        // Create a rotation for the triangle
-        long time = SystemClock.uptimeMillis() % 4000L;
-        float angle = 0.090f * ((int) time);
-        Matrix.setRotateM(mRotationMatrix, 0, angle, 1.0f, 1.0f, 1.0f);
+        Matrix.setLookAtM(mVMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
         
         // Calculate the projection and view transformation
         Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
-        Matrix.multiplyMM(mMVPMatrix, 0, mRotationMatrix, 0, mMVPMatrix, 0);        
 
+        /*
+        // Create a rotation for the triangle
+        long time = SystemClock.uptimeMillis() % 4000L;
+        float angle = 0.090f * ((int) time);
+        Matrix.setRotateM(mRotationMatrix, 0, angle, 1.0f, 1.0f, 1.0f);        
+        Matrix.multiplyMM(mMVPMatrix, 0, mRotationMatrix, 0, mMVPMatrix, 0);        
+         */
+        
         // Draw square
         mSquare.draw(mMVPMatrix);
 
@@ -69,14 +71,14 @@ public class GLRenderer implements GLSurfaceView.Renderer {
         // Create a rotation for the triangle
         time = SystemClock.uptimeMillis() % 4000L;
         angle = 0.090f * ((int) time);
-        Matrix.setRotateM(mRotationMatrix, 0, angle, 1.0f, 1.0f, 1.0f);
+        */
+        Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, -1.0f);
 
         // Combine the rotation matrix with the projection and camera view
         Matrix.multiplyMM(mMVPMatrix, 0, mRotationMatrix, 0, mMVPMatrix, 0);
 
         // Draw triangle
         mTriangle.draw(mMVPMatrix);
-        */
 	}
 	
 	public void onSurfaceChanged(GL10 unused, int width, int height) {
