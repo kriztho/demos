@@ -21,12 +21,12 @@ public class GLRenderer implements GLSurfaceView.Renderer {
     private Square   mSquare;
     private GLObject mObject;
 
-    private float[] mTemp = new float[16];                  // Temporary Matrix for mid calculations
-
-    private final float[] mMVPMatrix = new float[16];		// Matrix View Projection
-    private final float[] mProjMatrix = new float[16];		// Projection Matrix
-    private final float[] mVMatrix = new float[16];			// View Matrix
-    private final float[] mRotationMatrix = new float[16];	// Rotation Matrix
+    private float[] mMVPMatrix = new float[16];		    // Matrix View Projection
+    private float[] mProjMatrix = new float[16];		// Projection Matrix
+    private float[] mVMatrix = new float[16];			// View Matrix
+    private float[] mRotationMatrix = new float[16];	// Rotation Matrix
+    private float[] mLightModelMatrix = new float[16];  // Copy of the model matrix for the light position
+    private float[] mTemp = new float[16];              // Temporary Matrix for mid calculations
 
     // Declare as volatile because we are updating it from another thread
     public volatile float mAngle;
@@ -36,11 +36,30 @@ public class GLRenderer implements GLSurfaceView.Renderer {
 		
 		// Set the background frame color
 		GLES20.glClearColor(0f, 0f, 0f, 1.0f);
+
+        // Using Depth test
         GLES20.glDepthFunc(GLES20.GL_LEQUAL);
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
-        GLES20.glCullFace(GLES20.GL_BACK);
+
+        // User culling to remove back faces
         GLES20.glEnable(GLES20.GL_CULL_FACE);
+        GLES20.glCullFace(GLES20.GL_BACK);
         GLES20.glFrontFace(GLES20.GL_CCW);
+
+        // Position the eye in fron the origin
+        final float eyeX = 0f;
+        final float eyeY = 0f;
+        final float eyeZ = -0.5f;
+
+        // We are looking toward the distance
+        final float lookX = 0.0f;
+        final float lookY = 0.0f;
+        final float lookZ = -5f;
+
+        // Set our up vector. This is where our head would be pointing were we holding the camera.
+        final float upX = 0.0f;
+        final float upY = 1.0f;
+        final float upZ = 0.0f;
 
 		// initialize
 	    mTriangle = new Triangle();
@@ -54,7 +73,8 @@ public class GLRenderer implements GLSurfaceView.Renderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
         // Set the camera position (View matrix)
-        Matrix.setLookAtM(mVMatrix, 0, 0f, 0f, -8f, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+        //Matrix.setLookAtM(mVMatrix, 0, eyeX, eyeY, eyeZ, lookX, lookY, lookZ, upX, upY, upZ);
+        Matrix.setLookAtM(mVMatrix, 0, 0, 0, -5, 0, 0, 0, 0, 1, 0);
 
         // Calculate the projection and view transformation
         Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
@@ -75,6 +95,7 @@ public class GLRenderer implements GLSurfaceView.Renderer {
         time = SystemClock.uptimeMillis() % 4000L;
         angle = 0.090f * ((int) time);
         */
+
         Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0.0f, -1.0f, 0.0f);
         mTemp = mMVPMatrix.clone();
 
@@ -83,7 +104,7 @@ public class GLRenderer implements GLSurfaceView.Renderer {
 
         // Draw triangle
         //mTriangle.draw(mMVPMatrix);
-        mObject.draw(mMVPMatrix);
+        mObject.draw(mMVPMatrix, mVMatrix);
 	}
 	
 	public void onSurfaceChanged(GL10 unused, int width, int height) {
@@ -92,11 +113,13 @@ public class GLRenderer implements GLSurfaceView.Renderer {
         GLES20.glViewport(0, 0, width, height);
 
         float ratio = (float) width / height;
+        float fovy = 45;
+        float near = 1f;
+        float far = 15f;
 
         // this projection matrix is applied to object coordinates
         // in the onDrawFrame() method
-        //Matrix.frustumM(mProjMatrix, 0, -ratio, ratio, -ratio, ratio, 1, 10);
-        Matrix.perspectiveM(mProjMatrix, 0, 45, ratio, 1, 15);
+        Matrix.perspectiveM(mProjMatrix, 0, fovy, ratio, near, far);
         //Matrix.orthoM(mProjMatrix,0,   -ratio, ratio,  -1,1, 1,15);
 	}
 	
@@ -362,6 +385,7 @@ class GLObject {
 
     private static final String TAG = GLObject.class.getSimpleName();
 
+    /*
     private final String vertexShaderCode =
 			// This matrix member variable provides a hook to manipulate
 			// the coordinates of the objects that use this vertex shader
@@ -375,6 +399,43 @@ class GLObject {
 	        "  gl_Position = uMVPMatrix * vPosition;" +
             "  fColor = color;" +
 	        "}";
+    */
+
+    private final String vertexShaderCode =
+            // This matrix member variable provides a hook to manipulate
+            // the coordinates of the objects that use this vertex shader
+            "uniform mat4 uMVPMatrix;" +    // ModelViewProjectionMatrix
+            "uniform mat4 uMVMatrix;" +     // ModelViewMatrix
+            "uniform vec3 uLightPos;" +
+
+            "attribute vec4 vPosition;" +
+            "attribute vec4 color;" +
+            "attribute vec3 vNormal;" +
+
+            "varying vec4 fColor;" +
+
+            "void main() {" +
+                // transform the vertex into eye space
+                "   vec3 modelViewVertex = vec3(uMVMatrix * vPosition);" +
+                // transform the normal's orientation into eye space
+                "   vec3 modelViewNormal = vec3(uMVMatrix * vec4(vNormal, 0.0));" +
+                // will be used for attenuation
+                "   float distance = length(uLightPos - modelViewVertex);" +
+                // get a lighting direction vector from the light to the vertex
+                "   vec3 lightVector = normalize(uLightPos - modelViewVertex);" +
+                // calculate the dot product of the light vector and the vertex normal.
+                // If the normal and light vector are pointing in the same direction
+                // then it will get max illumination
+                "   float diffuse = max(dot(modelViewNormal, lightVector), 0.1);" +
+                // attenuate the light based on distance
+                "   diffuse = diffuse * (1.0 / (1.0 + (0.25 * distance * distance)));" +
+                // multiply the color by the illumination level. It will be interpolated across the triangle
+                "   fColor = color * diffuse;" +
+                //"   fColor = vec4(vec3(diffuse), 1.0);" +
+                // gl_position is a special variable used to store the final position.
+                // multiply the vertex by the matrix to get the final point in normalized screen coordinates
+                "  gl_Position = uMVPMatrix * vPosition;" +
+            "}";
 
 	private final String fragmentShaderCode =
 			"precision mediump float;" +
@@ -397,11 +458,14 @@ class GLObject {
 	private int mColorHandle;
     private int mColorAttribHandle;
     private int mNormalHandle;
+    private int mLightPosHandle;
+    private int mMVMatrixHandle;
 	private int mMVPMatrixHandle;
 
 	// number of coordinates per vertex in this array
 	static final int COORDS_PER_VERTEX = 3;
-    static final int COLORCOORDS_PER_VERTEX = 4;
+    static final int mColorDataSize = 4;
+    static final int mNormalDataSize = 3;
     private int vnumber = 8;
     private int fnumber = 12;
 
@@ -415,6 +479,16 @@ class GLObject {
     private short[] faces = new short[fnumber*3];
     private float[] colors = new float[vnumber*4];
     private float[] normals = new float[vnumber*3];
+
+    /** Used to hold a light centered on the origin in model space. We need a 4th coordinate so we can get translations to work when
+     *  we multiply this by our transformation matrices. */
+    private final float[] mLightPosInModelSpace = new float[] {0.0f, 0.0f, 0.0f, 1.0f};
+
+    /** Used to hold the current position of the light in world space (after transformation via model matrix). */
+    private final float[] mLightPosInWorldSpace = new float[4];
+
+    /** Used to hold the transformed position of the light in eye space (after transformation via modelview matrix) */
+    private final float[] mLightPosInEyeSpace = new float[4];
 
     // Indices
     private int vi = 0;
@@ -512,7 +586,7 @@ class GLObject {
 	        readColor(line);
 		} else if ( line.startsWith("f") ){
 			readFace(line);
-		} else if ( line.startsWith("vn") ){
+		} else if ( line.startsWith("n") ){
             readNormal(line);
         } else {
 			// For now, disregard everything else
@@ -574,7 +648,7 @@ class GLObject {
         String delims = "[ ]+";
         String[] tokens = line.split(delims);
 
-        if ( tokens[0].equals("vn") ) {
+        if ( tokens[0].equals("n") ) {
             normals[ni] = Float.parseFloat(tokens[1]);
             normals[ni+1] = Float.parseFloat(tokens[2]);
             normals[ni+2] = Float.parseFloat(tokens[3]);
@@ -582,51 +656,54 @@ class GLObject {
         }
     }
 
-	public void draw(float[] mvpMatrix) {
+	public void draw(float[] mvpMatrix, float[] mvMatrix) {
 		// Add program to OpenGL environment
 		GLES20.glUseProgram(mProgram);
         GLRenderer.checkGlError("glUseProgram");
 
-		// get handle to vertex shader's vPosition member
-		mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
-        GLRenderer.checkGlError("glGetAttribLocation");
-		// Enable a handle to the triangle vertices
-		GLES20.glEnableVertexAttribArray(mPositionHandle);
-        GLRenderer.checkGlError("glEnableVertexAttribArray");
-		// Prepare the triangle coordinate data
-		GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false, vertexStride, vertexBuffer);
-        GLRenderer.checkGlError("glVertexAttribPointer");
-
-
-        // Set up vertices colors
+        // Get program handles
+        mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
         mColorAttribHandle = GLES20.glGetAttribLocation(mProgram, "color");
-        GLRenderer.checkGlError("glGetAttribLocation");
-        GLES20.glEnableVertexAttribArray(mColorAttribHandle);
-        GLRenderer.checkGlError("glEnableVertexAttribArray");
-        GLES20.glVertexAttribPointer(mColorAttribHandle, 4, GLES20.GL_FLOAT, false, 4*4, colorBuffer);
-        GLRenderer.checkGlError("glVertexAttribPointer");
-
-/*
-        // Set up the vertices normals
+        mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
         mNormalHandle = GLES20.glGetAttribLocation(mProgram, "vNormal");
-        GLES20.glEnableVertexAttribArray(mNormalHandle);
-        GLES20.glVertexAttribPointer(mNormalHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false, vertexStride, normalBuffer);
-*/
+        mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
+        mMVMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVMatrix");
+        mLightPosHandle = GLES20.glGetUniformLocation(mProgram, "uLightPos");
+        GLRenderer.checkGlError("Handles");
 
-		// get handle to fragment shader's vColor member
-		mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
-        GLRenderer.checkGlError("glGetUniformLocation vColor");
+
+		// Load vertices
+		GLES20.glEnableVertexAttribArray(mPositionHandle);
+		GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false, vertexStride, vertexBuffer);
+        GLRenderer.checkGlError("Vertices");
+
+        // Load colors
+        GLES20.glEnableVertexAttribArray(mColorAttribHandle);
+        GLES20.glVertexAttribPointer(mColorAttribHandle, 4, GLES20.GL_FLOAT, false, 4*4, colorBuffer);
+        GLRenderer.checkGlError("Colors");
+
+        // Set up the vertices normals
+        GLES20.glEnableVertexAttribArray(mNormalHandle);
+        GLES20.glVertexAttribPointer(mNormalHandle, mNormalDataSize, GLES20.GL_FLOAT, false, 3*4, normalBuffer);
+        GLRenderer.checkGlError("Normals");
+
 		// Set color for drawing the triangle
 		GLES20.glUniform4fv(mColorHandle, 1, color, 0);
         GLRenderer.checkGlError("glUniform4fv");
 
-
-		// get handle to shape's transformation matrix
-		mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
-		GLRenderer.checkGlError("glGetUniformLocation");
-		// Apply the projection and view transformation
+        // Load MVPMatrix
 		GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
-		GLRenderer.checkGlError("glUniformMatrix4fv");
+		GLRenderer.checkGlError("MVPMatrix");
+
+        // Load MVMatrix
+        GLES20.glUniformMatrix4fv(mMVMatrixHandle, 1, false, mvMatrix, 0);
+        GLRenderer.checkGlError("MVMatrix");
+
+        // Pass in the light position in eye space
+        GLES20.glUniform3f(mLightPosHandle, mLightPosInEyeSpace[0], mLightPosInEyeSpace[1], mLightPosInEyeSpace[2]);
+
+        //Matrix.multiplyMM(mLightPosInWorldSpace, 0, mLightModelMatrix, 0, mLightPosInModelSpace, 0);
+        //Matrix.multiplyMM(mLightPosInEyeSpace, 0, mVMatrix, 0, mLightPosInWorldSpace, 0);
 
 		// Draw the cube
 		GLES20.glDrawElements(GLES20.GL_TRIANGLES, faces.length, GLES20.GL_UNSIGNED_SHORT, faceBuffer);
