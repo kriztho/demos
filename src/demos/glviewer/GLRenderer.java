@@ -25,11 +25,20 @@ public class GLRenderer implements GLSurfaceView.Renderer {
     private float[] mProjMatrix = new float[16];		// Projection Matrix
     private float[] mVMatrix = new float[16];			// View Matrix
     private float[] mRotationMatrix = new float[16];	// Rotation Matrix
+    private float[] mRotationMatX = new float[16];	// Rotation Matrix
+    private float[] mRotationMatY = new float[16];	// Rotation Matrix
     private float[] mLightModelMatrix = new float[16];  // Copy of the model matrix for the light position
     private float[] mTemp = new float[16];              // Temporary Matrix for mid calculations
 
+    private float[] mAccumulatedRotation = new float[16]; // Store the accumulated rotation
+    private float[] mCurrentRotation = new float[16];     // Store the current rotation
+
     // Declare as volatile because we are updating it from another thread
     public volatile float mAngle;
+    public volatile float mAngleX;
+    public volatile float mAngleY;
+
+
 
 	@Override
 	public void onSurfaceCreated(GL10 unused, javax.microedition.khronos.egl.EGLConfig config) {
@@ -43,8 +52,8 @@ public class GLRenderer implements GLSurfaceView.Renderer {
 
         // User culling to remove back faces
         GLES20.glEnable(GLES20.GL_CULL_FACE);
-        GLES20.glCullFace(GLES20.GL_BACK);
-        GLES20.glFrontFace(GLES20.GL_CCW);
+        //GLES20.glCullFace(GLES20.GL_BACK);
+        //GLES20.glFrontFace(GLES20.GL_CCW);
 
         // Position the eye in fron the origin
         final float eyeX = 0f;
@@ -65,50 +74,13 @@ public class GLRenderer implements GLSurfaceView.Renderer {
 	    mTriangle = new Triangle();
         mSquare = new Square();
         mObject = new GLObject();
+
+        // Initialize the accumulated rotation matrix
+        Matrix.setIdentityM(mAccumulatedRotation, 0);
 	}
-	
-	public void onDrawFrame(GL10 unused) {
-		
-		// Draw background color
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
-        // Set the camera position (View matrix)
-        //Matrix.setLookAtM(mVMatrix, 0, eyeX, eyeY, eyeZ, lookX, lookY, lookZ, upX, upY, upZ);
-        Matrix.setLookAtM(mVMatrix, 0, 0, 0, -5, 0, 0, 0, 0, 1, 0);
-
-        // Calculate the projection and view transformation
-        Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
-
-        /*
-        // Create a rotation for the triangle
-        long time = SystemClock.uptimeMillis() % 4000L;
-        float angle = 0.090f * ((int) time);
-        Matrix.setRotateM(mRotationMatrix, 0, angle, 1.0f, 1.0f, 1.0f);        
-        Matrix.multiplyMM(mMVPMatrix, 0, mRotationMatrix, 0, mMVPMatrix, 0);        
-         */
-        
-        // Draw square
-        //mSquare.draw(mMVPMatrix);
-
-        /*
-        // Create a rotation for the triangle
-        time = SystemClock.uptimeMillis() % 4000L;
-        angle = 0.090f * ((int) time);
-        */
-
-        Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0.0f, -1.0f, 0.0f);
-        mTemp = mMVPMatrix.clone();
-
-        // Combine the rotation matrix with the projection and camera view
-        Matrix.multiplyMM(mMVPMatrix, 0, mTemp, 0, mRotationMatrix, 0);
-
-        // Draw triangle
-        //mTriangle.draw(mMVPMatrix);
-        mObject.draw(mMVPMatrix, mVMatrix);
-	}
-	
-	public void onSurfaceChanged(GL10 unused, int width, int height) {
-		 // Adjust the viewport based on geometry changes,
+    public void onSurfaceChanged(GL10 unused, int width, int height) {
+        // Adjust the viewport based on geometry changes,
         // such as screen rotation
         GLES20.glViewport(0, 0, width, height);
 
@@ -121,6 +93,39 @@ public class GLRenderer implements GLSurfaceView.Renderer {
         // in the onDrawFrame() method
         Matrix.perspectiveM(mProjMatrix, 0, fovy, ratio, near, far);
         //Matrix.orthoM(mProjMatrix,0,   -ratio, ratio,  -1,1, 1,15);
+    }
+	
+	public void onDrawFrame(GL10 unused) {
+		
+		// Draw background color
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+
+        // Set the camera position (View matrix)
+        //Matrix.setLookAtM(mVMatrix, 0, eyeX, eyeY, eyeZ, lookX, lookY, lookZ, upX, upY, upZ);
+        Matrix.setLookAtM(mVMatrix, 0, 0, 0, -5, 0, 0, 0, 0, 1, 0);
+
+        // Set a matrix that contains the current rotation
+        Matrix.setIdentityM(mCurrentRotation, 0);
+        Matrix.setRotateM(mRotationMatX, 0, mAngleX, 0f, 1f, 0f);
+        Matrix.setRotateM(mRotationMatY, 0, mAngleY, -1f, 0f, 0f);
+        mAngleX = 0f;
+        mAngleY = 0f;
+
+        Matrix.multiplyMM(mCurrentRotation, 0, mRotationMatY, 0, mRotationMatX, 0);
+
+        // Multiply the current rotation by the accumulated rotation, and then set the accumulated rotation to the result
+        Matrix.multiplyMM(mTemp, 0, mCurrentRotation, 0, mAccumulatedRotation, 0);
+        System.arraycopy(mTemp, 0, mAccumulatedRotation, 0, 16);
+
+        // Rotate taking the overall rotation into account
+        Matrix.multiplyMM(mTemp, 0, mVMatrix, 0, mAccumulatedRotation, 0);
+        System.arraycopy(mTemp, 0, mVMatrix, 0, 16);
+
+        // Calculate the projection and view transformation
+        Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
+
+        // Draw triangle
+        mObject.draw(mMVPMatrix, mVMatrix);
 	}
 	
 	public static int loadShader(int type, String shaderCode){
@@ -385,7 +390,7 @@ class GLObject {
 
     private static final String TAG = GLObject.class.getSimpleName();
 
-    /*
+    /**
     private final String vertexShaderCode =
 			// This matrix member variable provides a hook to manipulate
 			// the coordinates of the objects that use this vertex shader
@@ -428,10 +433,10 @@ class GLObject {
                 // then it will get max illumination
                 "   float diffuse = max(dot(modelViewNormal, lightVector), 0.1);" +
                 // attenuate the light based on distance
-                "   diffuse = diffuse * (1.0 / (1.0 + (0.25 * distance * distance)));" +
+                //"   diffuse = diffuse * (1.0 / (1.0 + (0.25 * distance * distance)));" +
                 // multiply the color by the illumination level. It will be interpolated across the triangle
                 "   fColor = color * diffuse;" +
-                //"   fColor = vec4(vec3(diffuse), 1.0);" +
+                //"   fColor = vec4(uLightPos, 1.0);" +
                 // gl_position is a special variable used to store the final position.
                 // multiply the vertex by the matrix to get the final point in normalized screen coordinates
                 "  gl_Position = uMVPMatrix * vPosition;" +
@@ -466,7 +471,7 @@ class GLObject {
 	static final int COORDS_PER_VERTEX = 3;
     static final int mColorDataSize = 4;
     static final int mNormalDataSize = 3;
-    private int vnumber = 8;
+    private int vnumber = 24;
     private int fnumber = 12;
 
     //private ArrayList<Float> verts;
@@ -671,6 +676,9 @@ class GLObject {
         mLightPosHandle = GLES20.glGetUniformLocation(mProgram, "uLightPos");
         GLRenderer.checkGlError("Handles");
 
+        //Matrix.multiplyMM(mLightPosInWorldSpace, 0, mvpMatrix, 0, mLightPosInModelSpace, 0);
+        //Matrix.multiplyMM(mLightPosInEyeSpace, 0, mvMatrix, 0, mLightPosInWorldSpace, 0);
+
 
 		// Load vertices
 		GLES20.glEnableVertexAttribArray(mPositionHandle);
@@ -679,6 +687,7 @@ class GLObject {
 
         // Load colors
         GLES20.glEnableVertexAttribArray(mColorAttribHandle);
+        GLRenderer.checkGlError("enableColors");
         GLES20.glVertexAttribPointer(mColorAttribHandle, 4, GLES20.GL_FLOAT, false, 4*4, colorBuffer);
         GLRenderer.checkGlError("Colors");
 
@@ -700,10 +709,8 @@ class GLObject {
         GLRenderer.checkGlError("MVMatrix");
 
         // Pass in the light position in eye space
-        GLES20.glUniform3f(mLightPosHandle, mLightPosInEyeSpace[0], mLightPosInEyeSpace[1], mLightPosInEyeSpace[2]);
-
-        //Matrix.multiplyMM(mLightPosInWorldSpace, 0, mLightModelMatrix, 0, mLightPosInModelSpace, 0);
-        //Matrix.multiplyMM(mLightPosInEyeSpace, 0, mVMatrix, 0, mLightPosInWorldSpace, 0);
+        //GLES20.glUniform3f(mLightPosHandle, mLightPosInEyeSpace[0], mLightPosInEyeSpace[1], mLightPosInEyeSpace[2]);
+        GLES20.glUniform3f(mLightPosHandle, 1f, 1f, 1f);
 
 		// Draw the cube
 		GLES20.glDrawElements(GLES20.GL_TRIANGLES, faces.length, GLES20.GL_UNSIGNED_SHORT, faceBuffer);
